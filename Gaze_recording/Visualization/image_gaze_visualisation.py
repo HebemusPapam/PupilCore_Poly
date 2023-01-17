@@ -55,13 +55,7 @@ PATH = os.getcwd()
 IMG_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\img\\'
 HDF_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\data\\'
 FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
-print(PATH,IMG_PATH)
 
-'''
-IMG_PATH = 'C:/Users/marion/Documents/Gaze_recording/ExplorationImgCoder/img/'   # pathway of the images used during experiment
-HDF_PATH = 'C:/Users/marion/Documents/Gaze_recording/ExplorationImgCoder/data/'  # pathway of the HDF files recorded
-FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
-'''
 # heat map parameters
 HEATMAP_DETAIL = 0.04 #0.05 # this will determine the gaussian blur kerner of the image (higher number = more blur)
 
@@ -121,6 +115,7 @@ def heatmap_plot(image_name, image,extent,HM ):
     plt.imshow(image, cmap=plt.cm.gray, extent=extent)
     plt.imshow(HM, cmap=my_cmap, extent=extent, origin='lower')#,interpolation='bilinear')
     plt.axis('off')
+    plt.show()
 
 def raw_gaze_plot(image_name,x,y,filename,extent,image,win_size):
     fig, ax = plt.subplots()
@@ -135,6 +130,7 @@ def raw_gaze_plot(image_name,x,y,filename,extent,image,win_size):
     plt.ylim([-int(win_size[1])/2,int(win_size[1])/2])
     ax.axis('on')
     ax.legend()
+    plt.show()
         
 def raw_heatmap_plot(image_name,x,y,FILENAME,extent,image,win_size,cmap):
     # display the histogram overlap on the reference image
@@ -154,6 +150,7 @@ def raw_heatmap_plot(image_name,x,y,FILENAME,extent,image,win_size,cmap):
         
     plt.xlim([-int(win_size[0])/2,int(win_size[0])/2])
     plt.ylim([-int(win_size[1])/2,int(win_size[1])/2])
+    plt.show()
         
 def find_first_index(lst, condition):
     return [i for i, elem in enumerate(lst) if condition(elem)][0]
@@ -288,10 +285,12 @@ for i in range(nb_image): # LOOP OVER IMAGES
                 
                 
     ################## Get the window size used during experiment ##################
+
     win_size = events['text'][0].astype('U128').replace('ScreenSize=','')
     win_size = win_size.replace('[','')
     win_size = win_size.replace(']','')
     win_size = list(win_size.split(", "))
+
     
     ################## Heat map plot #######################
     if len(gaze_x_htmp) != 0 and PLOT_CHOICE == 'Heat_map': # if data exist

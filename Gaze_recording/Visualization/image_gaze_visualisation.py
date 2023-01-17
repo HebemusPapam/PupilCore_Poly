@@ -38,6 +38,7 @@ The heat map is computed using a 2d histogram of gaze data smoothed by a gausian
 ################## Import package ##################
 from tkinter import ttk
 import tkinter as tk
+import platform #connaitre système exploitation
 
 import warnings
 import os
@@ -52,10 +53,14 @@ from matplotlib.colors import ListedColormap
 ################## Parameters ##################
 # experiment data directory and files
 PATH = os.getcwd()
-IMG_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\img\\'
-HDF_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\data\\'
-FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
-
+if platform.system() == 'Windows' :
+    IMG_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\img\\'
+    HDF_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\data\\'
+    FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
+elif platform.system() == 'Darwin':
+    IMG_PATH = PATH + '/Gaze_recording/ExplorationImgCoder/img/'
+    HDF_PATH = PATH + '/Gaze_recording/ExplorationImgCoder/data/'
+    FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
 # heat map parameters
 HEATMAP_DETAIL = 0.04 #0.05 # this will determine the gaussian blur kerner of the image (higher number = more blur)
 

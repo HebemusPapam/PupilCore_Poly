@@ -52,9 +52,8 @@ from matplotlib.colors import ListedColormap
 ################## Parameters ##################
 # experiment data directory and files
 PATH = os.getcwd()
-PATH = PATH[0:len(PATH)-14]
-IMG_PATH = PATH + 'ExplorationImgCoder/img/'
-HDF_PATH = PATH + 'ExplorationImgCoder/data/'
+IMG_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\img\\'
+HDF_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\data\\'
 FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
 print(PATH,IMG_PATH)
 

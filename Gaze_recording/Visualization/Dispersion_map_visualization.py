@@ -17,7 +17,8 @@ from matplotlib.colors import ListedColormap
 PATH = os.getcwd()
 IMG_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\img\\'
 HDF_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\data\\'
-FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
+#FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
+FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5']
 
 # parameters useful just to init gaze data array's size which must be above T_IMG*F_TRACKER_MAX
 T_IMG = 7           # duration of the image exploration phase in seconds
@@ -32,7 +33,7 @@ def validate():
     global PLOT_CHOICE
     global RADIUS_CHOICE
     global DURATION_CHOICE
-    DURATION_CHOICE = float(w3.get())
+    DURATION_CHOICE = 0.001 * float(w3.get())
     RADIUS_CHOICE = float(w2.get())
     DATA_CHOICE = w1.get()
     PLOT_CHOICE = w.get()
@@ -42,46 +43,55 @@ def validate():
 def dispersion_map(time,gaze_x, gaze_y,radius,duration):
 
     """
-    H :  numpy.array of float
-        Density map of the gaze data distribution.
+    Return a list of cercle (x,y,radius) if the condition is respected
+    A circle is created, if the dispersion and time between the points are contained in their respective threshold.
+    The function first check if the distance between the point is longer than the radius and then if the time passed is sufficient.
     """
     tobii = 0
     rayon_dispersion = radius
     duration_limit = duration
-    gaze_x = gaze_x[~np.isnan(gaze_x).any()]
-    gaze_y = gaze_y[~np.isnan(gaze_y).any()]
-    print("Gaze_x : ",len(gaze_x)," Time : ",len(time))
     x_1 = gaze_x[0,tobii]
     y_1 = gaze_y[0,tobii]
     time_0 = time[tobii][0]
-    
+    NaN_count = 0
     cercle= []
     #we search the distance between each point 
     for i  in range(1,len(gaze_x)-2):
-        
-        x_2 = gaze_x[i,tobii]
-        y_2 = gaze_y[i,tobii]
-        time_1 = time[tobii][i]
-        distance = mt.sqrt((x_1-x_2)**2 + (y_1-y_2)**2)
-        #Event if the fixation is over (out of the circle)
-        if distance > rayon_dispersion : 
-            #The dispersion size must have evolved to be considered a fixation
-            if rayon_dispersion != radius :
-                #The time between 2 points must be high enough
-                if time_1-time_0 > duration_limit:
-                    cercle.append((x_1,y_1,rayon_dispersion))  #The center of the fixation is saved
-                    rayon_dispersion = radius #The dispersion is reset to its default value
-            x_1 = x_2
-            y_1 = y_2
-        elif rayon_dispersion < (radius*2):
-            rayon_dispersion = rayon_dispersion * 1.01
+        if np.isnan(gaze_x[i,tobii]) or np.isnan(gaze_y[i,tobii]):
+            NaN_count+=1
+        else:
+            x_2 = gaze_x[i,tobii]
+            y_2 = gaze_y[i,tobii]
+            
+            time_1 = time[tobii][i-NaN_count]
+            distance = mt.sqrt((x_1-x_2)**2 + (y_1-y_2)**2)
+            #Event if the fixation is over (out of the circle)
+            if distance > rayon_dispersion : 
+                #The dispersion size must have evolved to be considered a fixation
+                if rayon_dispersion != radius :
+                    #The time between 2 points must be high enough
+                    if time_1-time_0 >= duration_limit:
+                        cercle.append((x_1,y_1,rayon_dispersion))  #The center of the fixation is saved
+                        rayon_dispersion = radius #The dispersion is reset to its default value
+                x_1 = x_2
+                y_1 = y_2
+                time_0=time_1
+            elif rayon_dispersion < (radius*2):
+                rayon_dispersion = rayon_dispersion * 1.01
+    #Condition if the gaze stay in a circle and don't disperse at the end
+    if time_1-time_0 >= duration_limit:
+        cercle.append((x_1,y_1,rayon_dispersion))  #The center of the fixation is saved
+
+    print("i : ",len(gaze_x)-2," naN :", NaN_count )
+    print("cercle : ",cercle)
     return cercle
 
 def dispersion_plot(image_name,cercle,extent,image,win_size,radius):
     fig, ax = plt.subplots()
     ax.set_title('Raw gaze plot : '+image_name)
     for center in cercle :
-       ax.add_artist(plt.Circle((center[0],center[1]),center[2],
+        print("centre ",center)
+        ax.add_artist(plt.Circle((center[0],center[1]),center[2],
                                 linewidth = 2, color = 'red',fill=0))
     ax.imshow(image, extent=extent)    
     plt.xlim([-int(win_size[0])/2,int(win_size[0])/2])
@@ -114,7 +124,8 @@ def Disper_raw_plot(image_name,x,y,filename,extent,image,win_size,cercle):
             linestyle='-',fillstyle='full', #linestyle='dashed'
             label=filename)
     for center in cercle :
-       ax.add_artist(plt.Circle((center[0],center[1]),center[2],
+        print("centre ",center)
+        ax.add_artist(plt.Circle((center[0],center[1]),center[2],
                                 linewidth = 2, color = 'red',fill=0))
     ax.imshow(image, extent=extent)    
     plt.xlim([-int(win_size[0])/2,int(win_size[0])/2])
@@ -147,14 +158,14 @@ win.title('Plot parameters')
 w3 = ttk.Label(win, text = "Minimum fixation duration (ms) :")
 w3.grid(column = 0,row = 4, padx = 10, pady = 5)
 w3 = ttk.Entry(win)
-w3.insert(0,"15") #Valeur du temps
+w3.insert(0,"150") #Valeur du temps
 w3.grid(row=4,column=1,padx=10,pady=5)  # adding to grid
 
 # config the dispersion radius
 w2 = ttk.Label(win, text = "Maximum fixation dispersion:")
 w2.grid(column = 0,row = 3, padx = 10, pady = 5)
 w2 = ttk.Entry(win)
-w2.insert(0,"50") #Valeur du rayon
+w2.insert(0,"30") #Valeur du rayon
 w2.grid(row=3,column=1,padx=10,pady=5)  # adding to grid
 
 # config the box menu data choice
@@ -169,7 +180,7 @@ w = ttk.Label(win, text = "Select plot type :")
 w.grid(column = 0,row = 2, padx = 10, pady = 5)
 w = ttk.Combobox(win, values = ['Dispersion_map', 'Raw_gaze_plot', 'Both']) #box menu
 w.grid(row=2,column=1,padx=10,pady=5)    # adding to grid
-w.set('Raw_gaze_plot')                   # default selected option
+w.set('Both')                   # default selected option
 
 
 
@@ -247,6 +258,7 @@ for i in range(nb_image): # LOOP OVER IMAGES
                 img_gaze = img_gaze.T
                 
                 #get all the value of time for each gaze and each image
+                
                 gaze_time = np.array(bino_data['time'][ind_gaze_start:ind_gaze_stop])
                 gaze_time = gaze_time.T
                 # remove samples with NaN value in one of the (x,y) coordinates = Blink
@@ -261,6 +273,8 @@ for i in range(nb_image): # LOOP OVER IMAGES
                 np.delete(gaze_time,index_NaN)
                 gaze_time_xy[s] = gaze_time
                 """
+                img_gaze = img_gaze[~np.isnan(img_gaze).any(axis=1)]
+                
                 print("Time ", gaze_time,"\n","IMG : ", img_gaze,"\n")
                 print("Time ", len(gaze_time),"\n","IMG : ", len(img_gaze),"\n")
                 """

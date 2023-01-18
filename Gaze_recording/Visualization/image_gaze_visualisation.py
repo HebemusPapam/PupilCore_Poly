@@ -113,7 +113,7 @@ def heatmap(gaze_x, gaze_y, grid, detail):
     htmp = gaussian_filter(hist.T, sigma=(filter_w, filter_h), order=0)
     return htmp
 
-def heatmap_plot(image_name, image,extent,HM ):
+def heatmap_plot(image_name, image,extent,HM,cmap):
     "display the histogram overlap on the reference image"
     plt.figure()
     plt.title('Heat map '+image_name)

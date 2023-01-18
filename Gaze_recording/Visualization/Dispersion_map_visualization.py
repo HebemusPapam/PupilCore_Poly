@@ -6,7 +6,7 @@ import warnings
 import os
 import numpy as np
 import h5py
-
+import platform
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 from matplotlib.colors import ListedColormap
@@ -15,10 +15,16 @@ from matplotlib.colors import ListedColormap
 ################## Parameters ##################
 # experiment data directory and files
 PATH = os.getcwd()
-IMG_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\img\\'
-HDF_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\data\\'
-#FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
-FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5']
+if platform.system() == 'Windows' :
+    IMG_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\img\\'
+    HDF_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\data\\'
+elif platform.system() == 'Darwin':
+    IMG_PATH = PATH + '/Gaze_recording/ExplorationImgCoder/img/'
+    HDF_PATH = PATH + '/Gaze_recording/ExplorationImgCoder/data/'
+
+
+FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
+#FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5']
 
 # parameters useful just to init gaze data array's size which must be above T_IMG*F_TRACKER_MAX
 T_IMG = 7           # duration of the image exploration phase in seconds
@@ -43,7 +49,7 @@ def validate():
 def dispersion_map(time,gaze_x, gaze_y,radius,duration):
 
     """
-    Return a list of cercle (x,y,radius) if the condition is respected
+    Return a list of fixation : cercle (x,y,radius) if the conditions are respected
     A circle is created, if the dispersion and time between the points are contained in their respective threshold.
     The function first check if the distance between the point is longer than the radius and then if the time passed is sufficient.
     """
@@ -92,7 +98,7 @@ def dispersion_plot(image_name,cercle,extent,image,win_size,radius):
     for center in cercle :
         print("centre ",center)
         ax.add_artist(plt.Circle((center[0],center[1]),center[2],
-                                linewidth = 2, color = 'red',fill=0))
+                                linewidth = 2, fill=0 ))#,color = 'red'
     ax.imshow(image, extent=extent)    
     plt.xlim([-int(win_size[0])/2,int(win_size[0])/2])
     plt.ylim([-int(win_size[1])/2,int(win_size[1])/2])
@@ -124,9 +130,8 @@ def Disper_raw_plot(image_name,x,y,filename,extent,image,win_size,cercle):
             linestyle='-',fillstyle='full', #linestyle='dashed'
             label=filename)
     for center in cercle :
-        print("centre ",center)
         ax.add_artist(plt.Circle((center[0],center[1]),center[2],
-                                linewidth = 2, color = 'red',fill=0))
+                                linewidth = 2, fill=0 ,color = 'blue'))
     ax.imshow(image, extent=extent)    
     plt.xlim([-int(win_size[0])/2,int(win_size[0])/2])
     plt.ylim([-int(win_size[1])/2,int(win_size[1])/2])

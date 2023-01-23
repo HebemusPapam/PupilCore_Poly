@@ -15,6 +15,7 @@ from matplotlib.colors import ListedColormap
 ################## Parameters ##################
 # experiment data directory and files
 PATH = os.getcwd()
+print(PATH)
 if platform.system() == 'Windows' :
     IMG_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\img\\'
     HDF_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\data\\'
@@ -82,8 +83,8 @@ def dispersion_map(time,gaze_x, gaze_y,radius,duration):
                 x_1 = x_2
                 y_1 = y_2
                 time_0=time_1
-            elif rayon_dispersion < (radius*2):
-                rayon_dispersion = rayon_dispersion * 1.01
+            elif rayon_dispersion < (radius*3):
+                rayon_dispersion = rayon_dispersion * 1.005
     #Condition if the gaze stay in a circle and don't disperse at the end
     if time_1-time_0 >= duration_limit:
         cercle.append((x_1,y_1,rayon_dispersion))  #The center of the fixation is saved

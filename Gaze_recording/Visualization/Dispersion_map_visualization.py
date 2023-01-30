@@ -10,6 +10,7 @@ import platform
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 from matplotlib.colors import ListedColormap
+import pandas
 
 
 ################## Parameters ##################
@@ -24,8 +25,8 @@ elif platform.system() == 'Darwin':
     HDF_PATH = PATH + '/Gaze_recording/ExplorationImgCoder/data/'
 
 
-FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
-#FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5']
+#FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
+FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5']
 
 # parameters useful just to init gaze data array's size which must be above T_IMG*F_TRACKER_MAX
 T_IMG = 7           # duration of the image exploration phase in seconds
@@ -54,23 +55,20 @@ def dispersion_map(time,gaze_x, gaze_y,radius,duration):
     A circle is created, if the dispersion and time between the points are contained in their respective threshold.
     The function first check if the distance between the point is longer than the radius and then if the time passed is sufficient.
     """
-    tobii = 0
     rayon_dispersion = radius
     duration_limit = duration
-    x_1 = gaze_x[0,tobii]
-    y_1 = gaze_y[0,tobii]
-    time_0 = time[tobii][0]
-    NaN_count = 0
+    x_1 = gaze_x[0]
+    y_1 = gaze_y[0]
+    time_0 = time[0]
     cercle= []
+    points_in_fixation = [[x_1,y_1]]
+    middle_fix = []
     #we search the distance between each point 
-    for i  in range(1,len(gaze_x)-2):
-        if np.isnan(gaze_x[i,tobii]) or np.isnan(gaze_y[i,tobii]):
-            NaN_count+=1
-        else:
-            x_2 = gaze_x[i,tobii]
-            y_2 = gaze_y[i,tobii]
-            
-            time_1 = time[tobii][i-NaN_count]
+    for i in range(1,len(gaze_x)-2):
+        if np.isnan(gaze_x[i])==False:
+            x_2 = gaze_x[i]
+            y_2 = gaze_y[i]
+            time_1 = time[i]
             distance = mt.sqrt((x_1-x_2)**2 + (y_1-y_2)**2)
             #Event if the fixation is over (out of the circle)
             if distance > rayon_dispersion : 
@@ -78,20 +76,34 @@ def dispersion_map(time,gaze_x, gaze_y,radius,duration):
                 if rayon_dispersion != radius :
                     #The time between 2 points must be high enough
                     if time_1-time_0 >= duration_limit:
-                        cercle.append((x_1,y_1,rayon_dispersion))  #The center of the fixation is saved
+                        middle_fix = middle_calcul(points_in_fixation)
+                        cercle.append((middle_fix[0],middle_fix[1],rayon_dispersion,time_0,time_1-time_0))  #The center of the fixation is saved
                         rayon_dispersion = radius #The dispersion is reset to its default value
+
+                points_in_fixation = [[x_1,x_2]] #reset the points in a fixation 
                 x_1 = x_2
                 y_1 = y_2
                 time_0=time_1
+
             elif rayon_dispersion < (radius*3):
-                rayon_dispersion = rayon_dispersion * 1.005
+                points_in_fixation.append([x_2,y_2])
+                rayon_dispersion = rayon_dispersion * 1.01
     #Condition if the gaze stay in a circle and don't disperse at the end
     if time_1-time_0 >= duration_limit:
-        cercle.append((x_1,y_1,rayon_dispersion))  #The center of the fixation is saved
-
-    print("i : ",len(gaze_x)-2," naN :", NaN_count )
-    print("cercle : ",cercle)
+        middle_fix = middle_calcul(points_in_fixation)
+        cercle.append((middle_fix[0],middle_fix[1],rayon_dispersion,time_0,time_1-time_0))  #The center of the fixation is saved
+    Save_fixation(cercle) 
     return cercle
+
+def middle_calcul(points):
+    """Fonction qui retourne les coordonées du centre d'une succession de points
+    """
+    sum_x =0
+    sum_y =0
+    for point in points:
+        sum_x += point[0]
+        sum_y += point[1]
+    return [sum_x/len(points),sum_y/len(points)]
 
 def dispersion_plot(image_name,cercle,extent,image,win_size,radius):
     fig, ax = plt.subplots()
@@ -138,8 +150,14 @@ def Disper_raw_plot(image_name,x,y,filename,extent,image,win_size,cercle):
     plt.ylim([-int(win_size[1])/2,int(win_size[1])/2])
     ax.axis('on')
     ax.legend()
-    plt.show()   
+    plt.show()  
+    
 
+def Save_fixation(cercle):
+    print(cercle)
+    Cercle_array = np.array(cercle,dtype=[('Fixation_x','<i4'),('Fixation_y','<i4'),('rayon','<f4'),('Time Start','<f4'),('Duration','<f4')])
+    df3 = pandas.DataFrame(Cercle_array, columns=['Fixation_x','Fixation_y','Time Start','Duration'])
+    print(df3)
 
 def find_first_index(lst, condition):
     return [i for i, elem in enumerate(lst) if condition(elem)][0]
@@ -199,34 +217,27 @@ win.mainloop()
 nb_file  = np.size(FILENAME)
 FRAMES   = T_IMG*F_TRACKER_MAX*3
 
-for i in range(nb_image): # LOOP OVER IMAGES
+# --- LOOP OVER FILES --- #
+for s in range(nb_file):
 
-    # --- Init arrays to store gaze data of all hdf files specific to one given image ---#
-    #  Init empty 1d data arrays to store gaze data for heat map plot
-    gaze_x_htmp = []
-    gaze_y_htmp = []
-    
-
+    # --- Import hdf file data --- #
+    # Open hierachical element contained in the HDF data file
+    f = h5py.File(HDF_PATH+FILENAME[s],'r')
+ 
     # Init 2d arrays to store gaze data for raw gaze plot (size=nb_file,nb_sample_per_trials)
     gaze_x_raw = np.empty((FRAMES,nb_file))*np.nan
     gaze_y_raw = np.empty((FRAMES,nb_file))*np.nan
-    gaze_time = np.empty((FRAMES,nb_file))*np.nan
-    gaze_time_xy = [0,0]
-    # ---  load the image to plot --- #
-    img  = plt.imread(IMG_PATH+img_list[i])
-    img_size = img.shape[0:2] # height, width of the loaded image
-    extent = [-img_size[1]/2,img_size[1]/2,-img_size[0]/2,img_size[0]/2] #set the image coordinate origin to the image center
+    gaze_time_xy = np.empty((FRAMES,nb_file))*np.nan
+    # Import Experiment gaze data & events
+    bino_data = f['data_collection']['events']['eyetracker']['BinocularEyeSampleEvent']  # Access to the Binocular eye Samples of the HDF file
+    events    = f['data_collection']['events']['experiment']['MessageEvent']  # access to the binocular gaze data of the HDF file
 
-    # --- LOOP OVER FILES --- #
-    for s in range(nb_file):
-
-        # --- Import hdf file data --- #
-        # Open hierachical element contained in the HDF data file
-        f = h5py.File(HDF_PATH+FILENAME[s],'r')
-
-        # Import Experiment gaze data & events
-        bino_data = f['data_collection']['events']['eyetracker']['BinocularEyeSampleEvent']  # Access to the Binocular eye Samples of the HDF file
-        events    = f['data_collection']['events']['experiment']['MessageEvent']  # access to the binocular gaze data of the HDF file
+    
+    for i in range(nb_image): # LOOP OVER IMAGES
+            # ---  load the image to plot --- #
+        img  = plt.imread(IMG_PATH+img_list[i])
+        img_size = img.shape[0:2] # height, width of the loaded image
+        extent = [-img_size[1]/2,img_size[1]/2,-img_size[0]/2,img_size[0]/2] #set the image coordinate origin to the image center
 
         # --- Research the event id of the first and last samples recorded during the image exploration phase
         # Research the array index of the image event label
@@ -259,69 +270,37 @@ for i in range(nb_image): # LOOP OVER IMAGES
                         warnings.simplefilter("ignore", category=RuntimeWarning)
                         avg_gaze_x = np.nanmean(np.array([bino_data['left_gaze_x'][ind_gaze_start:ind_gaze_stop],bino_data['right_gaze_x'][ind_gaze_start:ind_gaze_stop]]), axis=0)
                         avg_gaze_y = np.nanmean(np.array([bino_data['left_gaze_y'][ind_gaze_start:ind_gaze_stop],bino_data['right_gaze_y'][ind_gaze_start:ind_gaze_stop]]), axis=0)
-                        img_gaze   = np.array([avg_gaze_x, avg_gaze_y])
-
-                img_gaze = img_gaze.T
+                        gaze_time = np.array(bino_data['time'][ind_gaze_start:ind_gaze_stop])
+                        img_gaze   = np.array([avg_gaze_x, avg_gaze_y,gaze_time])
                 
                 #get all the value of time for each gaze and each image
                 
-                gaze_time = np.array(bino_data['time'][ind_gaze_start:ind_gaze_stop])
-                gaze_time = gaze_time.T
-                # remove samples with NaN value in one of the (x,y) coordinates = Blink
-                count = 0
-                index_NaN=[]
-                for element in img_gaze :
-                    if np.isnan(element).any():
-                        index_NaN.append(count)
-                    count=count+1 #we seek the index of the NaN value
-                # remove samples trough their index, can remove the associate temporal data
-                np.delete(img_gaze,index_NaN)
-                np.delete(gaze_time,index_NaN)
-                gaze_time_xy[s] = gaze_time
-                """
                 img_gaze = img_gaze[~np.isnan(img_gaze).any(axis=1)]
+            
+        
                 
-                print("Time ", gaze_time,"\n","IMG : ", img_gaze,"\n")
-                print("Time ", len(gaze_time),"\n","IMG : ", len(img_gaze),"\n")
-                """
-                # --- store time data for this hdf file in the arrays with those from others hdf files ---#
+        ################## Get the window size used during experiment ##################
 
-                # --- store gaze data for this hdf file in the arrays with those from others hdf files ---#
-                # Heat map: concat with gaze data of others hdf files
-                if len(gaze_x_htmp) != 0: 
-                    gaze_x_htmp = np.concatenate((gaze_x_htmp, img_gaze[:,0]))
-                    gaze_y_htmp = np.concatenate((gaze_y_htmp, img_gaze[:,1]))
-                else:
-                    gaze_x_htmp = img_gaze[:,0]
-                    gaze_y_htmp = img_gaze[:,1]
+        win_size = events['text'][0].astype('U128').replace('ScreenSize=','')
+        win_size = win_size.replace('[','')
+        win_size = win_size.replace(']','')
+        win_size = list(win_size.split(", "))
 
-                # Raw gaze plot: store gaze data in different column for each hdf file
-                gaze_x_raw[0:np.size(img_gaze,0),s] = img_gaze[:,0]
-                gaze_y_raw[0:np.size(img_gaze,0),s] = img_gaze[:,1]
-                
-                
-    ################## Get the window size used during experiment ##################
+        ################## Dispersion map plot #######################
+        if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Dispersion_map': # if data exist
+            # --- Display the histogram overlap on the reference image --- #
+            List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
+            dispersion_plot(img_list[i],List_Circle,FILENAME,extent,img,win_size)
 
-    win_size = events['text'][0].astype('U128').replace('ScreenSize=','')
-    win_size = win_size.replace('[','')
-    win_size = win_size.replace(']','')
-    win_size = list(win_size.split(", "))
-
-    ################## Dispersion map plot #######################
-    if len(gaze_x_raw) != 0 and PLOT_CHOICE == 'Dispersion_map': # if data exist
-        # --- Display the histogram overlap on the reference image --- #
-       List_Circle = dispersion_map(gaze_time_xy,gaze_x_raw,gaze_y_raw,RADIUS_CHOICE,DURATION_CHOICE)
-       dispersion_plot(img_list[i],List_Circle,FILENAME,extent,img,win_size)
-
-    
-    ################## Raw gaze data plot ##################
-    if len(gaze_x_raw) != 0 and PLOT_CHOICE == 'Raw_gaze_plot': # if data exist
-        # --- Display raw gaze data overlap on the reference image --- #
-        raw_gaze_plot(img_list[i],gaze_x_raw,gaze_y_raw,FILENAME,extent,img,win_size)
-    
-    ################## Dispersion map & raw data subplot #######################
-    if len(gaze_x_raw) != 0 and PLOT_CHOICE == 'Both':
-        # --- Display raw gaze + heatmap overlap on the reference image --- #
-        List_Circle = dispersion_map(gaze_time_xy,gaze_x_raw,gaze_y_raw,RADIUS_CHOICE,DURATION_CHOICE)
-        Disper_raw_plot(img_list[i],gaze_x_raw,gaze_y_raw,FILENAME,extent,img,win_size,List_Circle)
-    
+        
+        ################## Raw gaze data plot ##################
+        if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Raw_gaze_plot': # if data exist
+            # --- Display raw gaze data overlap on the reference image --- #
+            raw_gaze_plot(img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size)
+        
+        ################## Dispersion map & raw data subplot #######################
+        if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Both':
+            # --- Display raw gaze + heatmap overlap on the reference image --- #
+            List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
+            Disper_raw_plot(img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size,List_Circle)
+        

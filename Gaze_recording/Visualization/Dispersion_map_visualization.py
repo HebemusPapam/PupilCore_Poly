@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 from matplotlib.colors import ListedColormap
 import pandas
-import openpyxl
 
 
 ################## Parameters ##################
@@ -33,8 +32,6 @@ FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5']
 T_IMG = 7           # duration of the image exploration phase in seconds
 F_TRACKER_MAX = 120 # highest sampling frequency in Hz of the eyetrackers used during FILENAME experiments
 
-# Defining the dataframe which will contain all the informations about the fixations
-#FIXATION_INFORMATION = pandas.DataFrame
 ################## Function definitions ##################
 def validate():
     """
@@ -51,7 +48,7 @@ def validate():
     win.destroy()
 
     
-def dispersion_map(time,gaze_x, gaze_y,radius,duration,filename,imgname):
+def dispersion_map(time,gaze_x, gaze_y,radius,duration):
 
     """
     Return a list of fixation : cercle (x,y,radius) if the conditions are respected
@@ -95,7 +92,7 @@ def dispersion_map(time,gaze_x, gaze_y,radius,duration,filename,imgname):
     if time_1-time_0 >= duration_limit:
         middle_fix = middle_calcul(points_in_fixation)
         cercle.append((middle_fix[0],middle_fix[1],rayon_dispersion,time_0,time_1-time_0))  #The center of the fixation is saved
-    Save_fixation(cercle,filename,imgname) 
+    Save_fixation(cercle) 
     return cercle
 
 def middle_calcul(points):
@@ -156,16 +153,10 @@ def Disper_raw_plot(image_name,x,y,filename,extent,image,win_size,cercle):
     plt.show()  
     
 
-def Save_fixation(cercle,participant,image):
-    #on ajoute le nom et numéro du participant de l'éxperience 
-    participant = participant.split('_')
-    nom = participant[2] + ' n° ' + participant[3][0:len(participant[3])-5]
-    #on transforme le tableau en dataframe afin d'être sauvegardé
-    Cercle_array = np.array(cercle,dtype=[('Fixation_x','<i1'),('Fixation_y','<i1'),('rayon','<f2'),('Time Start','<f2'),('Duration','<f2')])
-    df3 = pandas.DataFrame(Cercle_array, columns=['Fixation_x','Fixation_y','rayon','Time Start','Duration'])
-    df3.insert(0, 'INFORMATIONS', pandas.Series([nom,image], index=[0,1]))
-    df3 = df3.T
-    df3.to_excel('sample_data'+nom+'.xlsx', sheet_name='sheet1', index=True)
+def Save_fixation(cercle):
+    print(cercle)
+    Cercle_array = np.array(cercle,dtype=[('Fixation_x','<i4'),('Fixation_y','<i4'),('rayon','<f4'),('Time Start','<f4'),('Duration','<f4')])
+    df3 = pandas.DataFrame(Cercle_array, columns=['Fixation_x','Fixation_y','Time Start','Duration'])
     print(df3)
 
 def find_first_index(lst, condition):
@@ -286,10 +277,8 @@ for s in range(nb_file):
                 
                 img_gaze = img_gaze[~np.isnan(img_gaze).any(axis=1)]
             
-        
                 
         ################## Get the window size used during experiment ##################
-
         win_size = events['text'][0].astype('U128').replace('ScreenSize=','')
         win_size = win_size.replace('[','')
         win_size = win_size.replace(']','')
@@ -298,18 +287,19 @@ for s in range(nb_file):
         ################## Dispersion map plot #######################
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Dispersion_map': # if data exist
             # --- Display the histogram overlap on the reference image --- #
-            List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE,FILENAME[s],img_list[i])
-            dispersion_plot(img_list[i],List_Circle,FILENAME[s],extent,img,win_size)
+            List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
+            dispersion_plot(img_list[i],List_Circle,FILENAME,extent,img,win_size)
 
         
         ################## Raw gaze data plot ##################
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Raw_gaze_plot': # if data exist
             # --- Display raw gaze data overlap on the reference image --- #
-            raw_gaze_plot(img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size)
+            raw_gaze_plot(img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size)
         
         ################## Dispersion map & raw data subplot #######################
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Both':
             # --- Display raw gaze + heatmap overlap on the reference image --- #
-            List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE,FILENAME[s],img_list[i])
-            Disper_raw_plot(img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size,List_Circle)
+            List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
+            Disper_raw_plot(img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size,List_Circle)
+
         

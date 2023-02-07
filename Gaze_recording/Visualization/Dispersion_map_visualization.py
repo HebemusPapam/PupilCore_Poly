@@ -206,8 +206,6 @@ w = ttk.Combobox(win, values = ['Dispersion_map', 'Raw_gaze_plot', 'Both']) #box
 w.grid(row=2,column=1,padx=10,pady=5)    # adding to grid
 w.set('Both')                   # default selected option
 
-
-
 #config the validation button
 b1=tk.Button(win,text="Submit", command=lambda: validate())
 b1.grid(row=3,column=3)
@@ -302,4 +300,3 @@ for s in range(nb_file):
             List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
             Disper_raw_plot(img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size,List_Circle)
 
-        

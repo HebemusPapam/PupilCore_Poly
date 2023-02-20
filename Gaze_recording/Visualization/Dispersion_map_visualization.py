@@ -32,6 +32,10 @@ FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5']
 T_IMG = 7           # duration of the image exploration phase in seconds
 F_TRACKER_MAX = 120 # highest sampling frequency in Hz of the eyetrackers used during FILENAME experiments
 
+# Defining the dataframe which will contain all the informations about the fixations
+FIXATION_INFORMATION = pandas.DataFrame()
+SACCADE_INFORMATION = pandas.DataFrame()
+
 ################## Function definitions ##################
 def validate():
     """
@@ -155,11 +159,15 @@ def Disper_raw_plot(image_name,x,y,filename,extent,image,win_size,cercle):
     plt.show()  
     
 
-def Save_fixation(cercle):
-    print(cercle)
-    Cercle_array = np.array(cercle,dtype=[('Fixation_x','<i4'),('Fixation_y','<i4'),('rayon','<f4'),('Time Start','<f4'),('Duration','<f4')])
-    df3 = pandas.DataFrame(Cercle_array, columns=['Fixation_x','Fixation_y','Time Start','Duration'])
-    print(df3)
+def Save_fixation(cercle,participant,image):
+    #on ajoute le nom et numéro du participant de l'éxperience 
+    participant = participant.split('_')
+    nom = participant[2] + ' n° ' + participant[3][0:len(participant[3])-5]
+    #on transforme le tableau en dataframe afin d'être sauvegardé
+    Cercle_array = np.array(cercle,dtype=[('Fixation_x','<i1'),('Fixation_y','<i1'),('rayon','<f2'),('Time Start','<f2'),('Duration','<f2')])
+    FIXATION_INFORMATION = pandas.DataFrame(Cercle_array, columns=['Fixation_x','Fixation_y','rayon','Time Start','Duration'])
+    FIXATION_INFORMATION.insert(0, 'INFORMATIONS', pandas.Series([nom,image], index=[0,1]))
+    print(FIXATION_INFORMATION)
 
 def find_first_index(lst, condition):
     return [i for i, elem in enumerate(lst) if condition(elem)][0]
@@ -300,7 +308,9 @@ for s in range(nb_file):
         ################## Dispersion map & raw data subplot #######################
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Both':
             # --- Display raw gaze + heatmap overlap on the reference image --- #
-            List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
-            Disper_raw_plot(img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size,List_Circle)
-
+            List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE,FILENAME[s],img_list[i])
+            Disper_raw_plot(img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size,List_Circle)
+            
+FIXATION_INFORMATION.to_excel('sample_data.xlsx', sheet_name='sheet1', index=True)
+        
     

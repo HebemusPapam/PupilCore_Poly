@@ -113,7 +113,7 @@ def middle_calcul(points):
 #Fonction qui affiche les fixations sur l'image
 def dispersion_plot(time,image_name,x,y,cercle,extent,image,win_size): 
     """Fonction qui affiche les fixations sur l'image"""
-    fig, ax = plt.subplots(2)
+    fig, ax = plt.subplots(2,sharex=False, sharey=False) 
 
     #Pour la 1ere image 
     ax[0].set_title('Dispersion gaze plot : '+image_name)
@@ -122,8 +122,8 @@ def dispersion_plot(time,image_name,x,y,cercle,extent,image,win_size):
         ax[0].add_artist(plt.Circle((center[0],center[1]),center[2],linewidth = 2, fill=0 ))#,color = 'red'
 
     ax[0].imshow(image, extent=extent)    
-    plt.xlim([-int(win_size[0])/2,int(win_size[0])/2])
-    plt.ylim([-int(win_size[1])/2,int(win_size[1])/2])
+    ax[0].set_xlim([-int(win_size[0])/2,int(win_size[0])/2])
+    ax[0].set_ylim([-int(win_size[1])/2,int(win_size[1])/2])
 
     #Pour la 2eme image : 
     ax[1].set_title('Dispersion gaze plot : '+image_name)
@@ -141,7 +141,7 @@ def dispersion_plot(time,image_name,x,y,cercle,extent,image,win_size):
 
 def raw_gaze_plot(time,image_name,x,y,filename,extent,image,win_size):
     """Fonction qui affiche les points de regard sur l'image"""
-    fig, ax = plt.subplots(2)
+    fig, ax = plt.subplots(2,sharex=False, sharey=False)
 
     #Pour la 1ere image : 
     ax[0].set_title('Raw gaze plot : '+image_name)
@@ -151,8 +151,8 @@ def raw_gaze_plot(time,image_name,x,y,filename,extent,image,win_size):
             label=filename)
         
     ax[0].imshow(image, extent=extent)    
-    plt.xlim([-int(win_size[0])/2,int(win_size[0])/2])
-    plt.ylim([-int(win_size[1])/2,int(win_size[1])/2])
+    ax[0].set_xlim([-int(win_size[0])/2,int(win_size[0])/2])
+    ax[0].set_ylim([-int(win_size[1])/2,int(win_size[1])/2])
 
     #Pour la 2eme image : 
     ax[1].set_title('Raw gaze plot : '+image_name)
@@ -170,7 +170,7 @@ def raw_gaze_plot(time,image_name,x,y,filename,extent,image,win_size):
 
 def Disper_raw_plot(time,image_name,x,y,filename,extent,image,win_size,cercle):
     """Fonction qui affiche les points de regard sur l'image"""
-    fig, ax = plt.subplots(2)
+    fig, ax = plt.subplots(2,sharex=False, sharey=False)
     ax[0].set_title('Dispersion & Raw gaze plot : '+image_name)
     ax[0].plot(x, y, marker='',   # marker='.'
             linewidth=1, markersize=6,
@@ -180,8 +180,8 @@ def Disper_raw_plot(time,image_name,x,y,filename,extent,image,win_size,cercle):
         ax[0].add_artist(plt.Circle((center[0],center[1]),center[2],
                                 linewidth = 2, fill=0 ,color = 'blue'))
     ax[0].imshow(image, extent=extent)    
-    plt.xlim([-int(win_size[0])/2,int(win_size[0])/2])
-    plt.ylim([-int(win_size[1])/2,int(win_size[1])/2])
+    ax[0].set_xlim([-int(win_size[0])/2,int(win_size[0])/2])
+    ax[0].set_ylim([-int(win_size[1])/2,int(win_size[1])/2])
 
     #Pour la 2eme image : 
     ax[1].set_title('Dispersion & Raw gaze plot : '+image_name)

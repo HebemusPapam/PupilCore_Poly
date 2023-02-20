@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 from matplotlib.colors import ListedColormap
 import pandas
-import openpyxl
 
 
 ################## Parameters ##################
@@ -53,7 +52,7 @@ def validate():
     win.destroy()
 
     
-def dispersion_map(time,gaze_x, gaze_y,radius,duration,filename,imgname):
+def dispersion_map(time,gaze_x, gaze_y,radius,duration):
 
     """
     Return a list of fixation : cercle (x,y,radius) if the conditions are respected
@@ -97,7 +96,7 @@ def dispersion_map(time,gaze_x, gaze_y,radius,duration,filename,imgname):
     if time_1-time_0 >= duration_limit:
         middle_fix = middle_calcul(points_in_fixation)
         cercle.append((middle_fix[0],middle_fix[1],rayon_dispersion,time_0,time_1-time_0))  #The center of the fixation is saved
-    Save_fixation(cercle,filename,imgname) 
+    Save_fixation(cercle) 
     return cercle
 
 def middle_calcul(points):
@@ -215,8 +214,6 @@ w = ttk.Combobox(win, values = ['Dispersion_map', 'Raw_gaze_plot', 'Both']) #box
 w.grid(row=2,column=1,padx=10,pady=5)    # adding to grid
 w.set('Both')                   # default selected option
 
-
-
 #config the validation button
 b1=tk.Button(win,text="Submit", command=lambda: validate())
 b1.grid(row=3,column=3)
@@ -286,10 +283,8 @@ for s in range(nb_file):
                 
                 img_gaze = img_gaze[~np.isnan(img_gaze).any(axis=1)]
             
-        
                 
         ################## Get the window size used during experiment ##################
-
         win_size = events['text'][0].astype('U128').replace('ScreenSize=','')
         win_size = win_size.replace('[','')
         win_size = win_size.replace(']','')
@@ -298,14 +293,14 @@ for s in range(nb_file):
         ################## Dispersion map plot #######################
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Dispersion_map': # if data exist
             # --- Display the histogram overlap on the reference image --- #
-            List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE,FILENAME[s],img_list[i])
-            dispersion_plot(img_list[i],List_Circle,FILENAME[s],extent,img,win_size)
+            List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
+            dispersion_plot(img_list[i],List_Circle,FILENAME,extent,img,win_size)
 
         
         ################## Raw gaze data plot ##################
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Raw_gaze_plot': # if data exist
             # --- Display raw gaze data overlap on the reference image --- #
-            raw_gaze_plot(img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size)
+            raw_gaze_plot(img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size)
         
         ################## Dispersion map & raw data subplot #######################
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Both':

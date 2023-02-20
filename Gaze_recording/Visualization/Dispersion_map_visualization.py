@@ -52,7 +52,7 @@ def validate():
     win.destroy()
 
     
-def dispersion_map(time,gaze_x, gaze_y,radius,duration):
+def dispersion_map(time,gaze_x, gaze_y,radius,duration,participant, image):
 
     """
     Return a list of fixation : cercle (x,y,radius) if the conditions are respected
@@ -96,7 +96,7 @@ def dispersion_map(time,gaze_x, gaze_y,radius,duration):
     if time_1-time_0 >= duration_limit:
         middle_fix = middle_calcul(points_in_fixation)
         cercle.append((middle_fix[0],middle_fix[1],rayon_dispersion,time_0,time_1-time_0))  #The center of the fixation is saved
-    Save_fixation(cercle) 
+    Save_fixation(cercle,participant,image) 
     return cercle
 
 def middle_calcul(points):
@@ -108,55 +108,94 @@ def middle_calcul(points):
         sum_y += point[1]
     return [sum_x/len(points),sum_y/len(points)]
 
-def dispersion_plot(image_name,cercle,extent,image,win_size,radius): 
+
+
+#Fonction qui affiche les fixations sur l'image
+def dispersion_plot(time,image_name,x,y,cercle,extent,image,win_size): 
     """Fonction qui affiche les fixations sur l'image"""
-    fig, ax = plt.subplots()
-    ax.set_title('Raw gaze plot : '+image_name)
+    fig, ax = plt.subplots(2)
+
+    #Pour la 1ere image 
+    ax[0].set_title('Dispersion gaze plot : '+image_name)
     for center in cercle :
         print("centre ",center)
-        ax.add_artist(plt.Circle((center[0],center[1]),center[2],
-                                linewidth = 2, fill=0 ))#,color = 'red'
-    ax.imshow(image, extent=extent)    
+        ax[0].add_artist(plt.Circle((center[0],center[1]),center[2],linewidth = 2, fill=0 ))#,color = 'red'
+
+    ax[0].imshow(image, extent=extent)    
     plt.xlim([-int(win_size[0])/2,int(win_size[0])/2])
     plt.ylim([-int(win_size[1])/2,int(win_size[1])/2])
-    ax.axis('on')
-    ax.legend()
+
+    #Pour la 2eme image : 
+    ax[1].set_title('Dispersion gaze plot : '+image_name)
+    ax[1].plot(time,x,label='x')
+    ax[1].plot(time,y,label='y')
+    #plt.plot(time,x,label='x')
+    #plt.plot(time,y,label='y')
+   
+    #Plot des deux images dans une 
+    ax[1].axis('on')
+    ax[1].legend()
+    ax[0].axis('on')
+    ax[0].legend()
     plt.show()
 
-
-def raw_gaze_plot(image_name,x,y,filename,extent,image,win_size):
+def raw_gaze_plot(time,image_name,x,y,filename,extent,image,win_size):
     """Fonction qui affiche les points de regard sur l'image"""
-    fig, ax = plt.subplots()
-    ax.set_title('Dispersion gaze plot : '+image_name)
-    ax.plot(x, y, marker='',   # marker='.'
+    fig, ax = plt.subplots(2)
+
+    #Pour la 1ere image : 
+    ax[0].set_title('Raw gaze plot : '+image_name)
+    ax[0].plot(x, y, marker='',   # marker='.'
             linewidth=1, markersize=6,
             linestyle='-',fillstyle='full', #linestyle='dashed'
             label=filename)
         
-    ax.imshow(image, extent=extent)    
+    ax[0].imshow(image, extent=extent)    
     plt.xlim([-int(win_size[0])/2,int(win_size[0])/2])
     plt.ylim([-int(win_size[1])/2,int(win_size[1])/2])
-    ax.axis('on')
-    ax.legend()
+
+    #Pour la 2eme image : 
+    ax[1].set_title('Raw gaze plot : '+image_name)
+    ax[1].plot(time,x,label='x')
+    ax[1].plot(time,y,label='y')
+    #plt.plot(time,x,label='x')
+    #plt.plot(time,y,label='y')
+   
+    #Plot des deux images dans une 
+    ax[1].axis('on')
+    ax[1].legend()
+    ax[0].axis('on')
+    ax[0].legend()
     plt.show()
 
-def Disper_raw_plot(image_name,x,y,filename,extent,image,win_size,cercle):
+def Disper_raw_plot(time,image_name,x,y,filename,extent,image,win_size,cercle):
     """Fonction qui affiche les points de regard sur l'image"""
-    fig, ax = plt.subplots()
-    ax.set_title('Dispersion gaze plot : '+image_name)
-    ax.plot(x, y, marker='',   # marker='.'
+    fig, ax = plt.subplots(2)
+    ax[0].set_title('Dispersion & Raw gaze plot : '+image_name)
+    ax[0].plot(x, y, marker='',   # marker='.'
             linewidth=1, markersize=6,
             linestyle='-',fillstyle='full', #linestyle='dashed'
             label=filename)
     for center in cercle :
-        ax.add_artist(plt.Circle((center[0],center[1]),center[2],
+        ax[0].add_artist(plt.Circle((center[0],center[1]),center[2],
                                 linewidth = 2, fill=0 ,color = 'blue'))
-    ax.imshow(image, extent=extent)    
+    ax[0].imshow(image, extent=extent)    
     plt.xlim([-int(win_size[0])/2,int(win_size[0])/2])
     plt.ylim([-int(win_size[1])/2,int(win_size[1])/2])
-    ax.axis('on')
-    ax.legend()
-    plt.show()  
+
+    #Pour la 2eme image : 
+    ax[1].set_title('Dispersion & Raw gaze plot : '+image_name)
+    ax[1].plot(time,x,label='x')
+    ax[1].plot(time,y,label='y')
+    #plt.plot(time,x,label='x')
+    #plt.plot(time,y,label='y')
+   
+    #Plot des deux images dans une 
+    ax[1].axis('on')
+    ax[1].legend()
+    ax[0].axis('on')
+    ax[0].legend()
+    plt.show()
     
 
 def Save_fixation(cercle,participant,image):
@@ -296,20 +335,24 @@ for s in range(nb_file):
         ################## Dispersion map plot #######################
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Dispersion_map': # if data exist
             # --- Display the histogram overlap on the reference image --- #
-            List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
-            dispersion_plot(img_list[i],List_Circle,FILENAME,extent,img,win_size)
+            List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE,FILENAME[s],img_list[i])
+            #def dispersion_map(time,gaze_x, gaze_y,radius,duration,participant, image
+            dispersion_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],List_Circle,extent,img,win_size)
+            
 
-        
         ################## Raw gaze data plot ##################
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Raw_gaze_plot': # if data exist
             # --- Display raw gaze data overlap on the reference image --- #
-            raw_gaze_plot(img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size)
+            raw_gaze_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size)
+           
         
         ################## Dispersion map & raw data subplot #######################
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Both':
             # --- Display raw gaze + heatmap overlap on the reference image --- #
             List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE,FILENAME[s],img_list[i])
-            Disper_raw_plot(img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size,List_Circle)
+            Disper_raw_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size,List_Circle) 
+         
+        
             
 FIXATION_INFORMATION.to_excel('sample_data.xlsx', sheet_name='sheet1', index=True)
         

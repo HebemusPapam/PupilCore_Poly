@@ -296,7 +296,6 @@ for i in range(nb_image): # LOOP OVER IMAGES
     win_size = win_size.replace(']','')
     win_size = list(win_size.split(", "))
 
-    
     ################## Heat map plot #######################
     if len(gaze_x_htmp) != 0 and PLOT_CHOICE == 'Heat_map': # if data exist
         # --- Display the histogram overlap on the reference image --- #
@@ -313,4 +312,6 @@ for i in range(nb_image): # LOOP OVER IMAGES
         # --- Display raw gaze + heatmap overlap on the reference image --- #
         H = heatmap(gaze_x_htmp, gaze_y_htmp, img_size, HEATMAP_DETAIL)
         raw_heatmap_plot(img_list[i],gaze_x_raw,gaze_y_raw,FILENAME,extent,img,win_size,cmap)
-        
+
+    
+

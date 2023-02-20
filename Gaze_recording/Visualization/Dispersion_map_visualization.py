@@ -96,8 +96,7 @@ def dispersion_map(time,gaze_x, gaze_y,radius,duration):
     return cercle
 
 def middle_calcul(points):
-    """Fonction qui retourne les coordonées du centre d'une succession de points
-    """
+    """Fonction qui retourne les coordonées du centre d'une succession de points"""
     sum_x =0
     sum_y =0
     for point in points:
@@ -105,7 +104,8 @@ def middle_calcul(points):
         sum_y += point[1]
     return [sum_x/len(points),sum_y/len(points)]
 
-def dispersion_plot(image_name,cercle,extent,image,win_size,radius):
+def dispersion_plot(image_name,cercle,extent,image,win_size,radius): 
+    """Fonction qui affiche les fixations sur l'image"""
     fig, ax = plt.subplots()
     ax.set_title('Raw gaze plot : '+image_name)
     for center in cercle :
@@ -121,6 +121,7 @@ def dispersion_plot(image_name,cercle,extent,image,win_size,radius):
 
 
 def raw_gaze_plot(image_name,x,y,filename,extent,image,win_size):
+    """Fonction qui affiche les points de regard sur l'image"""
     fig, ax = plt.subplots()
     ax.set_title('Dispersion gaze plot : '+image_name)
     ax.plot(x, y, marker='',   # marker='.'
@@ -136,6 +137,7 @@ def raw_gaze_plot(image_name,x,y,filename,extent,image,win_size):
     plt.show()
 
 def Disper_raw_plot(image_name,x,y,filename,extent,image,win_size,cercle):
+    """Fonction qui affiche les points de regard sur l'image"""
     fig, ax = plt.subplots()
     ax.set_title('Dispersion gaze plot : '+image_name)
     ax.plot(x, y, marker='',   # marker='.'
@@ -275,7 +277,8 @@ for s in range(nb_file):
                 
                 img_gaze = img_gaze[~np.isnan(img_gaze).any(axis=1)]
             
-                
+       
+
         ################## Get the window size used during experiment ##################
         win_size = events['text'][0].astype('U128').replace('ScreenSize=','')
         win_size = win_size.replace('[','')
@@ -300,3 +303,4 @@ for s in range(nb_file):
             List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
             Disper_raw_plot(img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size,List_Circle)
 
+    

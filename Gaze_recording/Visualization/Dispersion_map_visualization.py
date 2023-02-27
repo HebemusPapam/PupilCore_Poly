@@ -205,8 +205,12 @@ def Save_fixation(cercle,participant,image):
     #on transforme le tableau en dataframe afin d'être sauvegardé
     Cercle_array = np.array(cercle,dtype=[('Fixation_x','<i1'),('Fixation_y','<i1'),('rayon','<f2'),('Time Start','<f2'),('Duration','<f2')])
     FIXATION_INFORMATION = pandas.DataFrame(Cercle_array, columns=['Fixation_x','Fixation_y','rayon','Time Start','Duration'])
-    FIXATION_INFORMATION.insert(0, 'INFORMATIONS', pandas.Series([nom,image], index=[0,1]))
+    #FIXATION_INFORMATION.insert(0, 'INFORMATIONS', pandas.Series([nom,image], index=[0,1]))
     print(FIXATION_INFORMATION)
+    with pandas.ExcelWriter(nom + '.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
+        FIXATION_INFORMATION.to_excel(xls, sheet_name=image, index=True,)
+    
+
 
 def find_first_index(lst, condition):
     return [i for i, elem in enumerate(lst) if condition(elem)][0]
@@ -352,8 +356,7 @@ for s in range(nb_file):
             List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE,FILENAME[s],img_list[i])
             Disper_raw_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size,List_Circle) 
          
-        
-            
-FIXATION_INFORMATION.to_excel('sample_data.xlsx', sheet_name='sheet1', index=True)
+          
+
         
     

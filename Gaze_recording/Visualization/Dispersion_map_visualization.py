@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 from matplotlib.colors import ListedColormap
 import pandas
-import csv
 
 
 ################## Parameters ##################
@@ -84,6 +83,7 @@ def dispersion_map(time,gaze_x, gaze_y,radius,duration,participant, image):
                         middle_fix = middle_calcul(points_in_fixation)
                         cercle.append((middle_fix[0],middle_fix[1],rayon_dispersion,time_0,time_1-time_0))  #The center of the fixation is saved
                         rayon_dispersion = radius #The dispersion is reset to its default value
+
                 points_in_fixation = [[x_1,x_2]] #reset the points in a fixation 
                 x_1 = x_2
                 y_1 = y_2
@@ -239,8 +239,15 @@ def Save_fixation(cercle,participant,image):
     #on transforme le tableau en dataframe afin d'être sauvegardé
     Cercle_array = np.array(cercle,dtype=[('Fixation_x','<i1'),('Fixation_y','<i1'),('rayon','<f2'),('Time Start','<f2'),('Duration','<f2')])
     FIXATION_INFORMATION = pandas.DataFrame(Cercle_array, columns=['Fixation_x','Fixation_y','rayon','Time Start','Duration'])
-    FIXATION_INFORMATION.insert(0, 'INFORMATIONS', pandas.Series([nom,image], index=[0,1]))
+    #FIXATION_INFORMATION.insert(0, 'INFORMATIONS', pandas.Series([nom,image], index=[0,1]))
     #print(FIXATION_INFORMATION)
+    if os.path.isfile(nom + '.xlsx'):
+        with pandas.ExcelWriter(nom + '.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
+            FIXATION_INFORMATION.to_excel(xls, sheet_name=image, index=True,)
+    else:
+        FIXATION_INFORMATION.to_excel(nom + '.xlsx', sheet_name=image, index=True,)
+    
+
 
 def find_first_index(lst, condition):
     return [i for i, elem in enumerate(lst) if condition(elem)][0]
@@ -373,15 +380,15 @@ for s in range(nb_file):
             #def dispersion_map(time,gaze_x, gaze_y,radius,duration,participant, image
             dispersion_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],List_Circle,extent,img,win_size)
             speed = speed_calcul(img_gaze[0],img_gaze[1],img_gaze[2])
-            fixation_velocity(speed,(4),img_gaze[0])
+            fixation_velocity(speed,(0.0005),img_gaze[2],img_gaze[0],img_gaze[1])
             #Save_CSV(fixation_velocity,"Dispersion_map.csv",FILENAME[s])
-
+            
         ################## Raw gaze data plot ##################
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Raw_gaze_plot': # if data exist
             # --- Display raw gaze data overlap on the reference image --- #
             raw_gaze_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size)
             speed = speed_calcul(img_gaze[0],img_gaze[1],img_gaze[2])
-            fixation_velocity(speed,(4),img_gaze[0])
+            fixation_velocity(speed,(0.0005),img_gaze[2],img_gaze[0],img_gaze[1])
             #Save_CSV(fixation_velocity,"Raw_data_subplot.csv",FILENAME[s])
         
         ################## Dispersion map & raw data subplot #######################
@@ -390,9 +397,8 @@ for s in range(nb_file):
             List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE,FILENAME[s],img_list[i])
             Disper_raw_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size,List_Circle) 
             speed = speed_calcul(img_gaze[0],img_gaze[1],img_gaze[2])
-            fixation_velocity(speed,(4),img_gaze[0])
+            fixation_velocity(speed,(0.0005),img_gaze[2],img_gaze[0],img_gaze[1])
             #Save_CSV(fixation_velocity,"Dispersion_map_&_Raw_data_subplot.csv",FILENAME[s])
 
-FIXATION_INFORMATION.to_excel('sample_data.xlsx', sheet_name='sheet1', index=True)
         
     

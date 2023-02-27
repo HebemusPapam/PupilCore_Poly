@@ -143,7 +143,7 @@ def Save_fixation(cercle,participant,image):
     participant = participant.split('_')
     nom = participant[2] + ' n° ' + participant[3][0:len(participant[3])-5]
     #on transforme le tableau en dataframe afin d'être sauvegardé
-    Cercle_array = np.array(cercle,dtype=[('Fixation_x','<i1'),('Fixation_y','<i1'),('rayon','<f2'),('Time Start','<f2'),('Duration','<f2')])
+    Cercle_array = np.array(cercle,dtype=[('Fixation_x','<i1'),('Fixation_y','<i1'),('rayon','<f4'),('Time Start','<f4'),('Duration','<f4')])
     FIXATION_INFORMATION = pandas.DataFrame(Cercle_array, columns=['Fixation_x','Fixation_y','rayon','Time Start','Duration'])
     FIXATION_INFORMATION.insert(0, 'INFORMATIONS', pandas.Series([nom,image], index=[0,1]))
     print(FIXATION_INFORMATION)
@@ -153,7 +153,7 @@ def Save_Saccade(Saccade,participant,image):
     participant = participant.split('_')
     nom = participant[2] + ' n° ' + participant[3][0:len(participant[3])-5]
     #on transforme le tableau en dataframe afin d'être sauvegardé
-    Saccade_array = np.array(Saccade,dtype=[('Type',np.unicode_, 16), ('X_start','<i1'), ('Y_start','<i1'), ('X_end','<i1'), ('Y_end','<i1'),('Time Start','<f2'),('Time End','<f2'),('Duration','<f2')])
+    Saccade_array = np.array(Saccade,dtype=[('Type',np.unicode_, 16), ('X_start','<i1'), ('Y_start','<i1'), ('X_end','<i1'), ('Y_end','<i1'),('Time Start','<f4'),('Time End','<f4'),('Duration','<f4')])
     SACCADE_INFORMATION = pandas.DataFrame(Saccade_array, columns=['Type','X_start','Y_start','X_end','Y_end','Time Start','Time End','Duration'])
     SACCADE_INFORMATION.insert(0, 'INFORMATIONS', pandas.Series([nom,image], index=[0,1]))
     print(SACCADE_INFORMATION)
@@ -182,14 +182,14 @@ win.title('Plot parameters')
 w3 = ttk.Label(win, text = "Minimum fixation duration (ms) :")
 w3.grid(column = 0,row = 4, padx = 10, pady = 5)
 w3 = ttk.Entry(win)
-w3.insert(0,"150") #Valeur du temps
+w3.insert(0,"200") #Valeur du temps
 w3.grid(row=4,column=1,padx=10,pady=5)  # adding to grid
 
 # config the dispersion radius
 w2 = ttk.Label(win, text = "Maximum fixation dispersion:")
 w2.grid(column = 0,row = 3, padx = 10, pady = 5)
 w2 = ttk.Entry(win)
-w2.insert(0,"150") #Valeur du rayon
+w2.insert(0,"200") #Valeur du rayon
 w2.grid(row=3,column=1,padx=10,pady=5)  # adding to grid
 
 # config the box menu data choice
@@ -287,9 +287,8 @@ for s in range(nb_file):
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Dispersion_map': # if data exist
             # --- Display the histogram overlap on the reference image --- #
             Fixation,Saccade = IDT.Choix_Methode_Dispersion("Salvucci",img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE,FILENAME[s],img_list[i])
-            #def Save_fixation(Fixation,FILENAME[s],img_list[i])
+            Save_fixation(Fixation,FILENAME[s],img_list[i])
             Save_Saccade(Saccade,FILENAME[s],img_list[i])
-            dispersion_map(time,gaze_x, gaze_y,radius,duration,participant, image
             dispersion_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],Fixation,extent,img,win_size)
             
 

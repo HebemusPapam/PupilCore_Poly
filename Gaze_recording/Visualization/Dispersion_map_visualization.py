@@ -207,8 +207,11 @@ def Save_fixation(cercle,participant,image):
     FIXATION_INFORMATION = pandas.DataFrame(Cercle_array, columns=['Fixation_x','Fixation_y','rayon','Time Start','Duration'])
     #FIXATION_INFORMATION.insert(0, 'INFORMATIONS', pandas.Series([nom,image], index=[0,1]))
     #print(FIXATION_INFORMATION)
-    with pandas.ExcelWriter(nom + '.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
-        FIXATION_INFORMATION.to_excel(xls, sheet_name=image, index=True,)
+    if os.path.isfile(nom + '.xlsx'):
+        with pandas.ExcelWriter(nom + '.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
+            FIXATION_INFORMATION.to_excel(xls, sheet_name=image, index=True,)
+    else:
+        FIXATION_INFORMATION.to_excel(nom + '.xlsx', sheet_name=image, index=True,)
     
 
 

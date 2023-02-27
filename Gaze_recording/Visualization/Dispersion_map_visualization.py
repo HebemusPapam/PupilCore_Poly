@@ -16,7 +16,7 @@ import pandas
 ################## Parameters ##################
 # experiment data directory and files
 PATH = os.getcwd()
-print(PATH)
+#print(PATH)
 if platform.system() == 'Windows' :
     IMG_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\img\\'
     HDF_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\data\\'
@@ -118,7 +118,7 @@ def dispersion_plot(time,image_name,x,y,cercle,extent,image,win_size):
     #Pour la 1ere image 
     ax[0].set_title('Dispersion gaze plot : '+image_name)
     for center in cercle :
-        print("centre ",center)
+        #print("centre ",center)
         ax[0].add_artist(plt.Circle((center[0],center[1]),center[2],linewidth = 2, fill=0 ))#,color = 'red'
 
     ax[0].imshow(image, extent=extent)    
@@ -206,7 +206,7 @@ def Save_fixation(cercle,participant,image):
     Cercle_array = np.array(cercle,dtype=[('Fixation_x','<i1'),('Fixation_y','<i1'),('rayon','<f2'),('Time Start','<f2'),('Duration','<f2')])
     FIXATION_INFORMATION = pandas.DataFrame(Cercle_array, columns=['Fixation_x','Fixation_y','rayon','Time Start','Duration'])
     #FIXATION_INFORMATION.insert(0, 'INFORMATIONS', pandas.Series([nom,image], index=[0,1]))
-    print(FIXATION_INFORMATION)
+    #print(FIXATION_INFORMATION)
     with pandas.ExcelWriter(nom + '.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
         FIXATION_INFORMATION.to_excel(xls, sheet_name=image, index=True,)
     

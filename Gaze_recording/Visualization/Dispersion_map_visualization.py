@@ -202,22 +202,24 @@ def speed_calcul(x,y,time):
     """Fonction qui calcule la vitesse entre deux points"""
     speed = []
     for i in range(len(x)-1):
-        speed.append(mt.sqrt((x[i+1]-x[i])**2+(y[i+1]-y[i])**2)/(time[i+1]-time[i]))
-    return speed
+        speed.append(mt.sqrt(((x[i+1]-x[i])**2+(y[i+1]-y[i])**2))/(time[i+1]-time[i]))
+    return speed #Liste en pixel par seconde
 
 #Fonction qui compare la vitesse entre deux points avec un seuil, et indique si le regard est fixé ou non 
-def fixation_velocity(speed,threshold_speed,time,x,y):
+def fixation_velocity(speed,threshold_speed,x): 
     """Fonction qui compare la vitesse entre deux points avec un seuil, et indique si le regard est fixé ou non"""
     tab_fixation = []
-    new_threshold_speed = threshold_speed
+    #Conversion du seuil en seconde : 
+    threshold_speed = threshold_speed*1000
     for i in range(len(x)-1):
-        if time[i+1]-time[i] < threshold_speed : 
-            new_threshold_speed  = time[i+1]-time[i]*threshold_speed
-        if speed[i] < new_threshold_speed : # On a une fixation 
+        #print('speed = ',speed[i])
+        if speed[i] < threshold_speed : # On a une fixation 
             tab_fixation.append("Fixation")
+            
         else : # On a un mouvement
             tab_fixation.append("Saccade")
-    print(tab_fixation)
+            print('Saccade')
+        print('Nature :',tab_fixation[i])
     return tab_fixation 
 
 #Fonction qui exporte tab_fixation dans un fichier csv
@@ -371,15 +373,15 @@ for s in range(nb_file):
             #def dispersion_map(time,gaze_x, gaze_y,radius,duration,participant, image
             dispersion_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],List_Circle,extent,img,win_size)
             speed = speed_calcul(img_gaze[0],img_gaze[1],img_gaze[2])
-            fixation_velocity(speed,(0.0005),img_gaze[2],img_gaze[0],img_gaze[1])
+            fixation_velocity(speed,(4),img_gaze[0])
             #Save_CSV(fixation_velocity,"Dispersion_map.csv",FILENAME[s])
-            
+
         ################## Raw gaze data plot ##################
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Raw_gaze_plot': # if data exist
             # --- Display raw gaze data overlap on the reference image --- #
             raw_gaze_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size)
             speed = speed_calcul(img_gaze[0],img_gaze[1],img_gaze[2])
-            fixation_velocity(speed,(0.0005),img_gaze[2],img_gaze[0],img_gaze[1])
+            fixation_velocity(speed,(4),img_gaze[0])
             #Save_CSV(fixation_velocity,"Raw_data_subplot.csv",FILENAME[s])
         
         ################## Dispersion map & raw data subplot #######################
@@ -388,7 +390,7 @@ for s in range(nb_file):
             List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE,FILENAME[s],img_list[i])
             Disper_raw_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size,List_Circle) 
             speed = speed_calcul(img_gaze[0],img_gaze[1],img_gaze[2])
-            fixation_velocity(speed,(0.0005),img_gaze[2],img_gaze[0],img_gaze[1])
+            fixation_velocity(speed,(4),img_gaze[0])
             #Save_CSV(fixation_velocity,"Dispersion_map_&_Raw_data_subplot.csv",FILENAME[s])
 
 FIXATION_INFORMATION.to_excel('sample_data.xlsx', sheet_name='sheet1', index=True)

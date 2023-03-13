@@ -55,7 +55,7 @@ def validate():
     PLOT_CHOICE = w.get()
     win.destroy()
 
-def dispersion_plot(image_name,cercle,extent,image,win_size,radius):
+def dispersion_plot(time,image_name,x,y,cercle,extent,image,win_size):
     fig, ax = plt.subplots()
     ax.set_title('Raw gaze plot : '+image_name)
     for center in cercle :

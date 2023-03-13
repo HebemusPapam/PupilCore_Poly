@@ -46,12 +46,15 @@ def validate():
     """
     global DATA_CHOICE
     global PLOT_CHOICE
+    global METHOD_CHOICE
     global RADIUS_CHOICE
     global DURATION_CHOICE
-    DURATION_CHOICE = 0.001 * float(w3.get())
-    RADIUS_CHOICE = float(w2.get())
+    
     DATA_CHOICE = w1.get()
-    PLOT_CHOICE = w.get()
+    PLOT_CHOICE = w2.get()
+    METHOD_CHOICE = w3.get()
+    RADIUS_CHOICE = float(w4.get())
+    DURATION_CHOICE = 0.001 * float(w5.get())
     win.destroy()
 
 def dispersion_plot(time,image_name,x,y,cercle,extent,image,win_size):
@@ -206,22 +209,8 @@ nb_image = np.size(img_list)
 ################## Dialog box to set visualization choice ##################
 # config the widget window
 win = tk.Tk()  # init the widget
-win.geometry('500x140')
+win.geometry('600x200')
 win.title('Plot parameters')
-
-# config the duration thresold
-w3 = ttk.Label(win, text = "Minimum fixation duration (ms) :")
-w3.grid(column = 0,row = 4, padx = 10, pady = 5)
-w3 = ttk.Entry(win)
-w3.insert(0,"200") #Valeur du temps
-w3.grid(row=4,column=1,padx=10,pady=5)  # adding to grid
-
-# config the dispersion radius
-w2 = ttk.Label(win, text = "Maximum fixation dispersion:")
-w2.grid(column = 0,row = 3, padx = 10, pady = 5)
-w2 = ttk.Entry(win)
-w2.insert(0,"150") #Valeur du rayon
-w2.grid(row=3,column=1,padx=10,pady=5)  # adding to grid
 
 # config the box menu data choice
 w1 = ttk.Label(win, text = "Select binocular data :")
@@ -231,15 +220,36 @@ w1.grid(row=1,column=1,padx=10,pady=5)  # adding to grid
 w1.set('Average both eyes')             # default selected option
 
 # config the box menu plot choice
-w = ttk.Label(win, text = "Select plot type :")
-w.grid(column = 0,row = 2, padx = 10, pady = 5)
-w = ttk.Combobox(win, values = ['Dispersion_map', 'Raw_gaze_plot', 'Both']) #box menu
-w.grid(row=2,column=1,padx=10,pady=5)    # adding to grid
-w.set('Both')                   # default selected option
+w2 = ttk.Label(win, text = "Select plot type :")
+w2.grid(column = 0,row = 2, padx = 10, pady = 5)
+w2 = ttk.Combobox(win, values = ['Dispersion_plot', 'Raw_gaze_plot', 'Both']) #box menu
+w2.grid(row=2,column=1,padx=10,pady=5)    # adding to grid
+w2.set('Both')                   # default selected option
+
+# config the box menu methode choice
+w3 = ttk.Label(win, text = "Select method :")
+w3.grid(column = 0,row = 3, padx = 10, pady = 5)
+w3 = ttk.Combobox(win, values = ['Dispersion', 'Velocity']) #box menu
+w3.grid(row=3,column=1,padx=10,pady=5)    # adding to grid
+w3.set('Dispersion')                   # default selected option
+
+# config the dispersion radius
+w4 = ttk.Label(win, text = "Maximum fixation dispersion:")
+w4.grid(column = 0,row = 4, padx = 10, pady = 5)
+w4 = ttk.Entry(win)
+w4.insert(0,"150") #Valeur du rayon
+w4.grid(row=4,column=1,padx=10,pady=5)  # adding to grid
+
+# config the duration thresold
+w5 = ttk.Label(win, text = "Minimum fixation duration (ms) :")
+w5.grid(column = 0,row = 5, padx = 10, pady = 5)
+w5 = ttk.Entry(win)
+w5.insert(0,"200") #Valeur du temps
+w5.grid(row=5,column=1,padx=10,pady=5)  # adding to grid
 
 #config the validation button
 b1=tk.Button(win,text="Submit", command=lambda: validate())
-b1.grid(row=3,column=3)
+b1.grid(row=5,column=3)
 win.mainloop()
 
 ################## Search for each image the corresponding gaze data in all hdf file loaded  ##################
@@ -315,27 +325,33 @@ for s in range(nb_file):
         win_size = list(win_size.split(", "))
 
         ################## Dispersion map plot #######################
-        if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Dispersion_map': # if data exist
+        if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Dispersion_plot': # if data exist
             # --- Display the histogram overlap on the reference image --- #
-            Fixation,Saccade = IDT.Choix_Methode_Dispersion("Salvucci",img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
-            Save_fixation(Fixation,FILENAME[s],img_list[i])
-            Save_Saccade(Saccade,FILENAME[s],img_list[i])
-            dispersion_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],Fixation,extent,img,win_size)
-            
+            if METHOD_CHOICE == 'Dispersion':
+                Fixation,Saccade = IDT.Choix_Methode_Dispersion("Salvucci",img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
+                Save_fixation(Fixation,FILENAME[s],img_list[i])
+                Save_Saccade(Saccade,FILENAME[s],img_list[i])
+                dispersion_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],Fixation,extent,img,win_size)
+            elif METHOD_CHOICE == 'Velocity':
+                print ("Not ended")
+  
 
         ################## Raw gaze data plot ##################
-        if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Raw_gaze_plot': # if data exist
+        elif len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Raw_gaze_plot': # if data exist
             # --- Display raw gaze data overlap on the reference image --- #
             raw_gaze_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size)
             
 
         ################## Dispersion map & raw data subplot #######################
-        if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Both':
+        elif len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Both':
             # --- Display raw gaze + heatmap overlap on the reference image --- #
-            Fixation,Saccade = IDT.Choix_Methode_Dispersion("Salvucci",img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
-            Save_fixation(Fixation,FILENAME[s],img_list[i])
-            Save_Saccade(Saccade,FILENAME[s],img_list[i]) 
-            Disper_raw_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size,Fixation) 
+            if METHOD_CHOICE == 'Dispersion':
+                Fixation,Saccade = IDT.Choix_Methode_Dispersion("Salvucci",img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
+                Save_fixation(Fixation,FILENAME[s],img_list[i])
+                Save_Saccade(Saccade,FILENAME[s],img_list[i]) 
+                Disper_raw_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size,Fixation) 
+            elif METHOD_CHOICE == 'Velocity':
+                print ("Not ended")
          
         
 

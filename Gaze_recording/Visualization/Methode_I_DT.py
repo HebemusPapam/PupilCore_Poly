@@ -197,7 +197,6 @@ def dispersion_map_Eucl(time,gaze_x,gaze_y,radius,duration):
         middle_fix = middle_calcul(gaze_x[start:end],gaze_y[start:end])
         fixation.append((middle_fix[0],middle_fix[1],rayon_dispersion,time_0,time_1-time_0))  #The center of the fixation is saved
         fixation.append((middle_fix[0],middle_fix[1],rayon_dispersion,time_0,time_1-time_0))  #The center of the fixation is saved
-    print("Cerlce Eucl : ",fixation)
     return fixation,saccade
 
 def middle_calcul(x,y):

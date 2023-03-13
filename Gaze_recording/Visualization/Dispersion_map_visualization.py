@@ -17,7 +17,6 @@ import Methode_I_DT as IDT
 ################## Parameters ##################
 # experiment data directory and files
 PATH = os.getcwd()
-print(PATH)
 if platform.system() == 'Windows' :
     IMG_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\img\\'
     #IMG_PATH = 'D:\Cours\IESE4\PupilCore_POLYTECH\PupilCore_Poly\Gaze_recording\ExplorationImgCoder\img\\'
@@ -59,7 +58,6 @@ def dispersion_plot(time,image_name,x,y,cercle,extent,image,win_size):
     fig, ax = plt.subplots()
     ax.set_title('Raw gaze plot : '+image_name)
     for center in cercle :
-        print("centre ",center)
         ax[0].add_artist(plt.Circle((center[0],center[1]),center[2],linewidth = 2, fill=0 ))#,color = 'red'
 
     ax[0].imshow(image, extent=extent)    
@@ -146,8 +144,6 @@ def Save_fixation(cercle,participant,image):
     #on transforme le tableau en dataframe afin d'être sauvegardé
     Cercle_array = np.array(cercle,dtype=[('Fixation_x (px)','<i1'),('Fixation_y (px)','<i1'),('rayon (px)','<f4'),('Time Start (s)','<f4'),('Duration (s)','<f4')])
     FIXATION_INFORMATION = pandas.DataFrame(Cercle_array, columns=['Fixation_x (px)','Fixation_y (px)','rayon (px)','Time Start (s)','Duration (s)'])
-    print(Cercle_array)
-    print(FIXATION_INFORMATION)
     if os.path.isfile(nom + '.xlsx'):
         with pandas.ExcelWriter(nom + '.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
             FIXATION_INFORMATION.to_excel(xls, sheet_name=image, index=True,)
@@ -162,8 +158,6 @@ def Save_Saccade(Saccade,participant,image):
     #on transforme le tableau en dataframe afin d'être sauvegardé
     Saccade_array = np.array(Saccade,dtype=[('Type',np.unicode_, 16), ('X_start (px)','<i1'), ('Y_start (px)','<i1'), ('X_end (px)','<i1'), ('Y_end (px)','<i1'),('Time Start (s)','<f4'),('Time End (s)','<f4'),('Duration (s)','<f4')])
     SACCADE_INFORMATION = pandas.DataFrame(Saccade_array, columns=['Type','X_start (px)','Y_start (px)','X_end (px)','Y_end (px)','Time Start (s)','Time End (s)','Duration (s)'])
-    print(Saccade_array)
-    print(SACCADE_INFORMATION)
     
     if os.path.isfile(nom + 'saccade.xlsx'):
         with pandas.ExcelWriter(nom + 'saccade.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
@@ -186,7 +180,7 @@ def fixation_velocity(speed,threshold_speed,x):
     #Conversion du seuil en seconde : 
     threshold_speed = threshold_speed*1000
     for i in range(len(x)-1):
-        #print('speed = ',speed[i])
+        print('speed = ',speed[i])
         if speed[i] < threshold_speed : # On a une fixation 
             tab_fixation.append("Fixation")
             

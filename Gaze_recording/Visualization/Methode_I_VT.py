@@ -1,4 +1,3 @@
-import numpy as np
 import math as mt
 
 #Fonction qui calcule la vitesse entre deux points, retourne un tableau de vitesse
@@ -25,14 +24,3 @@ def fixation_velocity(speed,threshold_speed,x):
             print('Saccade')
         print('Nature :',tab_fixation[i])
     return tab_fixation 
-
-    """
-    Fonction qui retourne les coordonées du centre d'une succession de points
-    """
-    sum_x = 0
-    sum_y = 0
-    for xp in x:
-        sum_x += xp
-    for yp in y:
-        sum_y += yp
-    return [sum_x/len(x),sum_y/len(y)]

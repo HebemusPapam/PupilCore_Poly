@@ -4,6 +4,7 @@ import tkinter as tk
 import math as mt
 import warnings
 import os
+from cv2 import line
 import numpy as np
 import h5py
 import platform
@@ -41,22 +42,40 @@ FIXATION_INFORMATION = pandas.DataFrame()
 SACCADE_INFORMATION = pandas.DataFrame()
 
 ################## Function definitions ##################
-def validate():
+def validate_win():
     """
     Get the user choice made in the widget's menu
     """
     global DATA_CHOICE
     global PLOT_CHOICE
     global METHOD_CHOICE
+    
+    DATA_CHOICE = data_choice.get()
+    PLOT_CHOICE = plot_choice.get()
+    METHOD_CHOICE = method_choice.get()
+    win.destroy()
+
+def validate_win_dis():
+    """
+    Get the user choice made in the widget's menu
+    """
+        
     global RADIUS_CHOICE
     global DURATION_CHOICE
-    
-    DATA_CHOICE = w1.get()
-    PLOT_CHOICE = w2.get()
-    METHOD_CHOICE = w3.get()
-    RADIUS_CHOICE = float(w4.get())
-    DURATION_CHOICE = 0.001 * float(w5.get())
-    win.destroy()
+        
+    RADIUS_CHOICE = float(radius_choice.get())
+    DURATION_CHOICE = 0.001 * float(duration_choice.get())
+    win_dis.destroy()
+
+def validate_win_vel():
+    """
+    Get the user choice made in the widget's menu
+    """
+        
+    global DURATION_CHOICE
+        
+    DURATION_CHOICE = 0.001 * float(duration_choice.get())
+    win_vel.destroy()
 
 def dispersion_plot(time,image_name,x,y,cercle,extent,image,win_size):
     fig, ax = plt.subplots(2,sharex=False, sharey=False)
@@ -185,48 +204,85 @@ nb_image = np.size(img_list)
 ################## Dialog box to set visualization choice ##################
 # config the widget window
 win = tk.Tk()  # init the widget
-win.geometry('600x200')
+win.geometry('600x150')
 win.title('Plot parameters')
+Row = 1
 
 # config the box menu data choice
-w1 = ttk.Label(win, text = "Select binocular data :")
-w1.grid(column = 0,row = 1, padx = 10, pady = 5)
-w1 = ttk.Combobox(win, values = ['Left eye', 'Right eye', 'Average both eyes']) #box menu
-w1.grid(row=1,column=1,padx=10,pady=5)  # adding to grid
-w1.set('Average both eyes')             # default selected option
+data_choice = ttk.Label(win, text = "Select binocular data :")
+data_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
+data_choice = ttk.Combobox(win, values = ['Left eye', 'Right eye', 'Average both eyes']) #box menu
+data_choice.grid(row=Row,column=1,padx=10,pady=5)  # adding to grid
+data_choice.set('Average both eyes')             # default selected option
 
 # config the box menu plot choice
-w2 = ttk.Label(win, text = "Select plot type :")
-w2.grid(column = 0,row = 2, padx = 10, pady = 5)
-w2 = ttk.Combobox(win, values = ['Dispersion_plot', 'Raw_gaze_plot', 'Both']) #box menu
-w2.grid(row=2,column=1,padx=10,pady=5)    # adding to grid
-w2.set('Both')                   # default selected option
+Row += 1
+plot_choice = ttk.Label(win, text = "Select plot type :")
+plot_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
+plot_choice = ttk.Combobox(win, values = ['Dispersion_plot', 'Raw_gaze_plot', 'Both']) #box menu
+plot_choice.grid(row=Row,column=1,padx=10,pady=5)    # adding to grid
+plot_choice.set('Both')                   # default selected option
 
 # config the box menu methode choice
-w3 = ttk.Label(win, text = "Select method :")
-w3.grid(column = 0,row = 3, padx = 10, pady = 5)
-w3 = ttk.Combobox(win, values = ['Dispersion', 'Velocity']) #box menu
-w3.grid(row=3,column=1,padx=10,pady=5)    # adding to grid
-w3.set('Dispersion')                   # default selected option
-
-# config the dispersion radius
-w4 = ttk.Label(win, text = "Maximum fixation dispersion:")
-w4.grid(column = 0,row = 4, padx = 10, pady = 5)
-w4 = ttk.Entry(win)
-w4.insert(0,"150") #Valeur du rayon
-w4.grid(row=4,column=1,padx=10,pady=5)  # adding to grid
-
-# config the duration thresold
-w5 = ttk.Label(win, text = "Minimum fixation duration (ms) :")
-w5.grid(column = 0,row = 5, padx = 10, pady = 5)
-w5 = ttk.Entry(win)
-w5.insert(0,"200") #Valeur du temps
-w5.grid(row=5,column=1,padx=10,pady=5)  # adding to grid
+Row += 1
+method_choice = ttk.Label(win, text = "Select method :")
+method_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
+method_choice = ttk.Combobox(win, values = ['Dispersion', 'Velocity']) #box menu
+method_choice.grid(row=Row,column=1,padx=10,pady=5)    # adding to grid
+method_choice.set('Dispersion')                   # default selected option
 
 #config the validation button
-b1=tk.Button(win,text="Submit", command=lambda: validate())
-b1.grid(row=5,column=3)
+b1=tk.Button(win,text="Submit", command=lambda: validate_win())
+b1.grid(row=Row,column=3)
 win.mainloop()
+
+if METHOD_CHOICE == 'Dispersion':
+    # config the widget window
+    win_dis = tk.Tk()  # init the widget
+    win_dis.geometry('600x100')
+    win_dis.title('Plot parameters')
+    Row = 1
+
+    # config the dispersion radius
+    Row += 1
+    radius_choice = ttk.Label(win_dis, text = "Maximum fixation dispersion:")
+    radius_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
+    radius_choice = ttk.Entry(win_dis)
+    radius_choice.insert(0,"150") #Valeur du rayon
+    radius_choice.grid(row=Row,column=1,padx=10,pady=5)  # adding to grid
+
+    # config the duration thresold
+    Row += 1
+    duration_choice = ttk.Label(win_dis, text = "Minimum fixation duration (ms) :")
+    duration_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
+    duration_choice = ttk.Entry(win_dis)
+    duration_choice.insert(0,"200") #Valeur du temps
+    duration_choice.grid(row=Row,column=1,padx=10,pady=5)  # adding to grid
+
+    #config the validation button
+    b1=tk.Button(win_dis,text="Submit", command=lambda: validate_win_dis())
+    b1.grid(row=Row,column=3)
+    win_dis.mainloop()
+
+elif METHOD_CHOICE == 'Velocity':
+    # config the widget window
+    win_vel = tk.Tk()  # init the widget
+    win_vel.geometry('600x100')
+    win_vel.title('Plot parameters')
+    Row = 1
+
+    # config the duration thresold
+    Row += 1
+    duration_choice = ttk.Label(win_vel, text = "Minimum fixation duration (ms) :")
+    duration_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
+    duration_choice = ttk.Entry(win_vel)
+    duration_choice.insert(0,"200") #Valeur du temps
+    duration_choice.grid(row=Row,column=1,padx=10,pady=5)  # adding to grid
+
+    #config the validation button
+    b1=tk.Button(win_vel,text="Submit", command=lambda: validate_win_vel())
+    b1.grid(row=Row,column=3)
+    win_vel.mainloop()
 
 ################## Search for each image the corresponding gaze data in all hdf file loaded  ##################
 nb_file  = np.size(FILENAME)

@@ -274,7 +274,7 @@ for s in range(nb_file):
 
         if len(index_img_labbel[0]) != 0 :  # if the data exist for this image ('img_list[i]' exists)                              
             
-            # read the time at which the image exploration pahse started
+            # read the time at which the image exploration phase started
             index_img_labbel = index_img_labbel[0][0]
             t_start_img   = events['text'][index_img_labbel-1].astype('U128').replace('IMAGE_START :','')
 
@@ -317,7 +317,7 @@ for s in range(nb_file):
         ################## Dispersion map plot #######################
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Dispersion_map': # if data exist
             # --- Display the histogram overlap on the reference image --- #
-            Fixation,Saccade = IDT.Choix_Methode_Dispersion("Salvucci",img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE,FILENAME[s],img_list[i])
+            Fixation,Saccade = IDT.Choix_Methode_Dispersion("Salvucci",img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
             Save_fixation(Fixation,FILENAME[s],img_list[i])
             Save_Saccade(Saccade,FILENAME[s],img_list[i])
             dispersion_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],Fixation,extent,img,win_size)

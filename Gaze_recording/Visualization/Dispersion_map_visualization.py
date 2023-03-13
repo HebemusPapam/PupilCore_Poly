@@ -55,10 +55,10 @@ def validate():
     win.destroy()
 
 def dispersion_plot(time,image_name,x,y,cercle,extent,image,win_size):
-    fig, ax = plt.subplots()
-    ax.set_title('Raw gaze plot : '+image_name)
+    fig, ax = plt.subplots(2,sharex=False, sharey=False)
+    ax[0].set_title('Raw gaze plot : '+image_name)
     for center in cercle :
-        ax[0].add_artist(plt.Circle((center[0],center[1]),center[2],linewidth = 2, fill=0 ))#,color = 'red'
+        ax[0].add_artist(plt.Circle((center[0],center[1]),center[2],linewidth = 2, fill=0 ,color = 'red'))
 
     ax[0].imshow(image, extent=extent)    
     ax[0].set_xlim([-int(win_size[0])/2,int(win_size[0])/2])

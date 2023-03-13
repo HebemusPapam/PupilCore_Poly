@@ -23,6 +23,7 @@ if platform.system() == 'Windows' :
     #IMG_PATH = 'D:\Cours\IESE4\PupilCore_POLYTECH\PupilCore_Poly\Gaze_recording\ExplorationImgCoder\img\\'
     HDF_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\data\\'
     #HDF_PATH = 'D:\Cours\IESE4\PupilCore_POLYTECH\PupilCore_Poly\Gaze_recording\ExplorationImgCoder\data\\'
+
 elif platform.system() == 'Darwin':
     IMG_PATH = PATH + '/Gaze_recording/ExplorationImgCoder/img/'
     HDF_PATH = PATH + '/Gaze_recording/ExplorationImgCoder/data/'
@@ -143,20 +144,32 @@ def Save_fixation(cercle,participant,image):
     participant = participant.split('_')
     nom = participant[2] + ' n° ' + participant[3][0:len(participant[3])-5]
     #on transforme le tableau en dataframe afin d'être sauvegardé
-    Cercle_array = np.array(cercle,dtype=[('Fixation_x','<i1'),('Fixation_y','<i1'),('rayon','<f4'),('Time Start','<f4'),('Duration','<f4')])
-    FIXATION_INFORMATION = pandas.DataFrame(Cercle_array, columns=['Fixation_x','Fixation_y','rayon','Time Start','Duration'])
-    FIXATION_INFORMATION.insert(0, 'INFORMATIONS', pandas.Series([nom,image], index=[0,1]))
+    Cercle_array = np.array(cercle,dtype=[('Fixation_x (px)','<i1'),('Fixation_y (px)','<i1'),('rayon (px)','<f4'),('Time Start (s)','<f4'),('Duration (s)','<f4')])
+    FIXATION_INFORMATION = pandas.DataFrame(Cercle_array, columns=['Fixation_x (px)','Fixation_y (px)','rayon (px)','Time Start (s)','Duration (s)'])
+    print(Cercle_array)
     print(FIXATION_INFORMATION)
+    if os.path.isfile(nom + '.xlsx'):
+        with pandas.ExcelWriter(nom + '.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
+            FIXATION_INFORMATION.to_excel(xls, sheet_name=image, index=True,)
+    else:
+        FIXATION_INFORMATION.to_excel(nom + '.xlsx', sheet_name=image, index=True,)
 
 def Save_Saccade(Saccade,participant,image):
     #on ajoute le nom et numéro du participant de l'éxperience 
     participant = participant.split('_')
     nom = participant[2] + ' n° ' + participant[3][0:len(participant[3])-5]
+    
     #on transforme le tableau en dataframe afin d'être sauvegardé
-    Saccade_array = np.array(Saccade,dtype=[('Type',np.unicode_, 16), ('X_start','<i1'), ('Y_start','<i1'), ('X_end','<i1'), ('Y_end','<i1'),('Time Start','<f4'),('Time End','<f4'),('Duration','<f4')])
-    SACCADE_INFORMATION = pandas.DataFrame(Saccade_array, columns=['Type','X_start','Y_start','X_end','Y_end','Time Start','Time End','Duration'])
-    SACCADE_INFORMATION.insert(0, 'INFORMATIONS', pandas.Series([nom,image], index=[0,1]))
+    Saccade_array = np.array(Saccade,dtype=[('Type',np.unicode_, 16), ('X_start (px)','<i1'), ('Y_start (px)','<i1'), ('X_end (px)','<i1'), ('Y_end (px)','<i1'),('Time Start (s)','<f4'),('Time End (s)','<f4'),('Duration (s)','<f4')])
+    SACCADE_INFORMATION = pandas.DataFrame(Saccade_array, columns=['Type','X_start (px)','Y_start (px)','X_end (px)','Y_end (px)','Time Start (s)','Time End (s)','Duration (s)'])
+    print(Saccade_array)
     print(SACCADE_INFORMATION)
+    
+    if os.path.isfile(nom + 'saccade.xlsx'):
+        with pandas.ExcelWriter(nom + 'saccade.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
+            SACCADE_INFORMATION.to_excel(xls, sheet_name=image, index=True,)
+    else:
+        SACCADE_INFORMATION.to_excel(nom + 'saccade.xlsx', sheet_name=image, index=True,)
 
 
 def find_first_index(lst, condition):
@@ -189,7 +202,7 @@ w3.grid(row=4,column=1,padx=10,pady=5)  # adding to grid
 w2 = ttk.Label(win, text = "Maximum fixation dispersion:")
 w2.grid(column = 0,row = 3, padx = 10, pady = 5)
 w2 = ttk.Entry(win)
-w2.insert(0,"200") #Valeur du rayon
+w2.insert(0,"150") #Valeur du rayon
 w2.grid(row=3,column=1,padx=10,pady=5)  # adding to grid
 
 # config the box menu data choice
@@ -296,8 +309,8 @@ for s in range(nb_file):
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Raw_gaze_plot': # if data exist
             # --- Display raw gaze data overlap on the reference image --- #
             raw_gaze_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size)
-           
-        
+            
+
         ################## Dispersion map & raw data subplot #######################
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Both':
             # --- Display raw gaze + heatmap overlap on the reference image --- #
@@ -307,7 +320,6 @@ for s in range(nb_file):
             Disper_raw_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size,Fixation) 
          
         
-            
-FIXATION_INFORMATION.to_excel('sample_data.xlsx', sheet_name='sheet1', index=True)
+
         
     

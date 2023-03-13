@@ -12,6 +12,7 @@ from scipy.ndimage import gaussian_filter
 from matplotlib.colors import ListedColormap
 import pandas
 import Methode_I_DT as IDT
+import Methode_I_VT as IVT
 
 
 ################## Parameters ##################
@@ -137,8 +138,7 @@ def Disper_raw_plot(time,image_name,x,y,filename,extent,image,win_size,cercle):
     ax[1].legend()
     ax[0].axis('on')
     ax[0].legend()
-    plt.show()
-    
+    plt.show() 
 
 def Save_fixation(cercle,participant,image):
     #on ajoute le nom et numéro du participant de l'éxperience 
@@ -168,33 +168,9 @@ def Save_Saccade(Saccade,participant,image):
     else:
         SACCADE_INFORMATION.to_excel(nom + 'saccade.xlsx', sheet_name=image, index=True,)
     
-#Fonction qui calcule la vitesse entre deux points, retourne un tableau de vitesse
-def speed_calcul(x,y,time):
-    """Fonction qui calcule la vitesse entre deux points"""
-    speed = []
-    for i in range(len(x)-1):
-        speed.append(mt.sqrt(((x[i+1]-x[i])**2+(y[i+1]-y[i])**2))/(time[i+1]-time[i]))
-    return speed #Liste en pixel par seconde
-
-#Fonction qui compare la vitesse entre deux points avec un seuil, et indique si le regard est fixé ou non 
-def fixation_velocity(speed,threshold_speed,x): 
-    """Fonction qui compare la vitesse entre deux points avec un seuil, et indique si le regard est fixé ou non"""
-    tab_fixation = []
-    #Conversion du seuil en seconde : 
-    threshold_speed = threshold_speed*1000
-    for i in range(len(x)-1):
-        print('speed = ',speed[i])
-        if speed[i] < threshold_speed : # On a une fixation 
-            tab_fixation.append("Fixation")
-            
-        else : # On a un mouvement
-            tab_fixation.append("Saccade")
-            print('Saccade')
-        print('Nature :',tab_fixation[i])
-    return tab_fixation 
-
 def find_first_index(lst, condition):
     return [i for i, elem in enumerate(lst) if condition(elem)][0]
+
 ################## Search image files used in /IMG_PATH ##################
 img_list = []
 
@@ -324,36 +300,24 @@ for s in range(nb_file):
         win_size = win_size.replace(']','')
         win_size = list(win_size.split(", "))
 
-        ################## Dispersion map plot #######################
-        if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Dispersion_plot': # if data exist
-            # --- Display the histogram overlap on the reference image --- #
-            if METHOD_CHOICE == 'Dispersion':
-                Fixation,Saccade = IDT.Choix_Methode_Dispersion("Salvucci",img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
-                Save_fixation(Fixation,FILENAME[s],img_list[i])
-                Save_Saccade(Saccade,FILENAME[s],img_list[i])
-                dispersion_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],Fixation,extent,img,win_size)
-            elif METHOD_CHOICE == 'Velocity':
-                print ("Not ended")
-  
-
         ################## Raw gaze data plot ##################
-        elif len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Raw_gaze_plot': # if data exist
+        if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Raw_gaze_plot': # if data exist
             # --- Display raw gaze data overlap on the reference image --- #
             raw_gaze_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size)
             
 
-        ################## Dispersion map & raw data subplot #######################
-        elif len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Both':
-            # --- Display raw gaze + heatmap overlap on the reference image --- #
+        ################## Dispersion map plot #######################
+        elif len(img_gaze[0]) != 0 and (PLOT_CHOICE == 'Dispersion_plot' or PLOT_CHOICE == 'Both'): # if data exist
+            # --- Display the histogram overlap on the reference image --- #
             if METHOD_CHOICE == 'Dispersion':
                 Fixation,Saccade = IDT.Choix_Methode_Dispersion("Salvucci",img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
-                Save_fixation(Fixation,FILENAME[s],img_list[i])
-                Save_Saccade(Saccade,FILENAME[s],img_list[i]) 
-                Disper_raw_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size,Fixation) 
             elif METHOD_CHOICE == 'Velocity':
                 print ("Not ended")
-         
-        
+                break
+            Save_fixation(Fixation,FILENAME[s],img_list[i])
+            Save_Saccade(Saccade,FILENAME[s],img_list[i])
 
-        
-    
+            if PLOT_CHOICE == 'Dispersion_plot':
+                dispersion_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],Fixation,extent,img,win_size)
+            elif PLOT_CHOICE == 'Both':
+                Disper_raw_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size,Fixation) 

@@ -49,16 +49,18 @@ import h5py
 import numpy as np
 import os, os.path
 import cv2
-    
+import time
+import Methode_I_DT as IDT
 import tkinter as tk
 from tkinter import ttk
 
 
 ################## PARAMETERS TO SET ##################
-EXPERIMENT_PATH = 'C:/Users/marion/Documents/Gaze_recording/ExplorationImgCoder/'
-VIDEO_PATH = EXPERIMENT_PATH + 'video/'        # directory pathway of the videos used during experiment
-FRAME_PATH = EXPERIMENT_PATH + 'frame_timing/' # directory pathway of the frame timing txt files
-HDF_PATH   = EXPERIMENT_PATH + 'data/'         # directory pathway of the HDF files recorded
+EXPERIMENT_PATH = 'D:\\Cours\\IESE4\\PupilCore_POLYTECH\\PupilCore_Poly\\Gaze_recording\\ExplorationImgCoder\\'
+
+VIDEO_PATH = EXPERIMENT_PATH + 'video\\'        # directory pathway of the videos used during experiment
+FRAME_PATH = EXPERIMENT_PATH + 'frame_timing\\' # directory pathway of the frame timing txt files
+HDF_PATH   = EXPERIMENT_PATH + 'data\\'         # directory pathway of the HDF files recorded
 FILENAME = 'video_explo_Tobii_s_002.hdf5'        # hdf5 file to visualize
 R = 10 # diameter/2 of the gaze cross visualization (must be pair)
 
@@ -95,8 +97,28 @@ def gaze_overlap(x,y):
     
     d.line([(1381-D/2, 566), (1381+D/2, 566)], fill ="red", width = 3) #horizontal line
     d.line([(1381, 566-D/2), (1381, 566+D/2)], fill ="red", width = 3) #vertical line
-    
     return img
+
+def Dispersion_overlap(img1,fixation,x,y,t1,t2):
+    global width, height
+    """ Create a transparent image overlay of size=(video.width,video.height)
+    which contains multiple crosses at gaze positions (xi,yi)"""
+    # create transparent Image
+    d = ImageDraw.Draw(img1)
+    
+    # create center is the frame contain a fixation
+    for center in fixation :
+        start = center[3]
+        stop = center[3] + center[4]
+        if (t1>start and t1<stop) or (t2>start and t2<stop):
+            for u in range(len(x)):
+                if ~(np.isnan(x[u]) or np.isnan(y[u])): # if gaze data is not NaN
+                    radius = center[2]
+                    d.ellipse([(center[0]-radius + width/2,-center[1]-radius + height/2),
+                            (center[0]+radius + width/2,-center[1]+radius + height/2)],
+                            outline = 'red')
+            break    
+    return img1
 
 def reset_overlap():
     """ Create a transparent image overlay of size=(video.width,video.height)
@@ -110,9 +132,8 @@ def plot_frame_gaze_2(frame_count):
     """"For a given video frame display at elapsed_ms time
     overlay on it the elapsed_ms time on Top Left
     and the gaze cross position overlay """
-    global image
-    print(frame_count)
-    
+    global image,Fixation
+    #print(frame_count)
     # search in the frame timing txt file the line of the current frame displayed
     frame_ind = np.where(frame_time_array[:,0] == frame_count)
         
@@ -133,8 +154,22 @@ def plot_frame_gaze_2(frame_count):
             y = gaze[ind1:ind2,2]
                   
             # Create an overlay image with cross at gaze positions to plot over the video
-            image = gaze_overlap(x,y) 
-            
+            image = gaze_overlap(x,y)
+
+            #check if the start of dispersion is contained in the time bewteen the two frames
+            image = Dispersion_overlap(image,Fixation,x,y,t1,t2)
+
+            """start = Fixation[N_fix][3]
+            stop = Fixation[N_fix][3] + Fixation[N_fix][4]
+            print(start," et ",stop, "///////",t1," et ",t2)
+            if (t1>start and t1<stop) or (t2>start and t2<stop):
+                print("fix")
+                image = Dispersion_overlap(image,Fixation,N_fix,x,y,t1,t2)
+
+            #if current time is superior compared to the starting time of the fixation + its duration
+            elif t1>stop:
+                N_fix = N_fix+1 #Next fixation"""
+
     else: #if the current frame has been dropped in psychopy experiment
         image = reset_overlap() # remove previous frame gaze overlap
     
@@ -208,8 +243,16 @@ elif DATA_CHOICE == 'Average both eyes' :  # compute gaze average between both e
         warnings.simplefilter("ignore", category=RuntimeWarning)   
         avg_gaze_x = np.nanmean(np.array([data['left_gaze_x'],data['right_gaze_x']]), axis=0)
         avg_gaze_y = np.nanmean(np.array([data['left_gaze_y'],data['right_gaze_y']]), axis=0)                        
-        gaze = np.array([data['time'], avg_gaze_x, avg_gaze_y]).T
+        gaze = np.array([data['time'], avg_gaze_x, avg_gaze_y])
+    gaze = gaze.T
+    gaze = gaze[~np.isnan(gaze).any(axis=1)]
+    gaze = gaze.T
 
+##################Find the disperison to add on the image###############
+DURATION_CHOICE = 0.001 * 150
+RADIUS_CHOICE = 150
+Fixation,Saccade = IDT.Choix_Methode_Dispersion("Salvucci",gaze[0],gaze[1],gaze[2],RADIUS_CHOICE,DURATION_CHOICE)
+gaze = gaze.T
 
 ################## Open the txt file and load video frame timing data  ##################
 frame_file = FRAME_PATH+FILENAME.replace('.hdf5','')+'_'+VIDEO_NAME+'.txt'
@@ -272,4 +315,5 @@ def my_q_binding():
 
 # --- start playing the video --- #
 player.play(VIDEO_PATH+VIDEO_NAME)
+time.sleep(30)
 player.wait_until_playing()

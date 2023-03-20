@@ -4,6 +4,7 @@ import tkinter as tk
 import math as mt
 import warnings
 import os
+from cv2 import line
 import numpy as np
 import h5py
 import platform
@@ -11,15 +12,19 @@ import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 from matplotlib.colors import ListedColormap
 import pandas
+import Methode_I_DT as IDT
+import Methode_I_VT as IVT
 
 
 ################## Parameters ##################
 # experiment data directory and files
 PATH = os.getcwd()
-#print(PATH)
 if platform.system() == 'Windows' :
     IMG_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\img\\'
+    #IMG_PATH = 'D:\Cours\IESE4\PupilCore_POLYTECH\PupilCore_Poly\Gaze_recording\ExplorationImgCoder\img\\'
     HDF_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\data\\'
+    #HDF_PATH = 'D:\Cours\IESE4\PupilCore_POLYTECH\PupilCore_Poly\Gaze_recording\ExplorationImgCoder\data\\'
+
 elif platform.system() == 'Darwin':
     IMG_PATH = PATH + '/Gaze_recording/ExplorationImgCoder/img/'
     HDF_PATH = PATH + '/Gaze_recording/ExplorationImgCoder/data/'
@@ -37,89 +42,46 @@ FIXATION_INFORMATION = pandas.DataFrame()
 SACCADE_INFORMATION = pandas.DataFrame()
 
 ################## Function definitions ##################
-def validate():
+def validate_win():
     """
     Get the user choice made in the widget's menu
     """
     global DATA_CHOICE
     global PLOT_CHOICE
-    global RADIUS_CHOICE
-    global DURATION_CHOICE
-    DURATION_CHOICE = 0.001 * float(w3.get())
-    RADIUS_CHOICE = float(w2.get())
-    DATA_CHOICE = w1.get()
-    PLOT_CHOICE = w.get()
+    global METHOD_CHOICE
+    
+    DATA_CHOICE = data_choice.get()
+    PLOT_CHOICE = plot_choice.get()
+    METHOD_CHOICE = method_choice.get()
     win.destroy()
 
-    
-def dispersion_map(time,gaze_x, gaze_y,radius,duration,participant, image):
-
+def validate_win_dis():
     """
-    Return a list of fixation : cercle (x,y,radius) if the conditions are respected
-    A circle is created, if the dispersion and time between the points are contained in their respective threshold.
-    The function first check if the distance between the point is longer than the radius and then if the time passed is sufficient.
+    Get the user choice made in the widget's menu
     """
-    rayon_dispersion = radius
-    duration_limit = duration
-    x_1 = gaze_x[0]
-    y_1 = gaze_y[0]
-    time_0 = time[0]
-    cercle= []
-    points_in_fixation = [[x_1,y_1]]
-    middle_fix = []
-    #we search the distance between each point 
-    for i in range(1,len(gaze_x)-2):
-        if np.isnan(gaze_x[i])==False:
-            x_2 = gaze_x[i]
-            y_2 = gaze_y[i]
-            time_1 = time[i]
-            distance = mt.sqrt((x_1-x_2)**2 + (y_1-y_2)**2)
-            #Event if the fixation is over (out of the circle)
-            if distance > rayon_dispersion : 
-                #The dispersion size must have evolved to be considered a fixation
-                if rayon_dispersion != radius :
-                    #The time between 2 points must be high enough
-                    if time_1-time_0 >= duration_limit:
-                        middle_fix = middle_calcul(points_in_fixation)
-                        cercle.append((middle_fix[0],middle_fix[1],rayon_dispersion,time_0,time_1-time_0))  #The center of the fixation is saved
-                        rayon_dispersion = radius #The dispersion is reset to its default value
+        
+    global RADIUS_CHOICE
+    global DURATION_CHOICE
+        
+    RADIUS_CHOICE = float(radius_choice.get())
+    DURATION_CHOICE = 0.001 * float(duration_choice.get())
+    win_dis.destroy()
 
-                points_in_fixation = [[x_1,x_2]] #reset the points in a fixation 
-                x_1 = x_2
-                y_1 = y_2
-                time_0=time_1
+def validate_win_vel():
+    """
+    Get the user choice made in the widget's menu
+    """
+        
+    global DURATION_CHOICE
+        
+    DURATION_CHOICE = 0.001 * float(duration_choice.get())
+    win_vel.destroy()
 
-            elif rayon_dispersion < (radius*3):
-                points_in_fixation.append([x_2,y_2])
-                rayon_dispersion = rayon_dispersion * 1.01
-    #Condition if the gaze stay in a circle and don't disperse at the end
-    if time_1-time_0 >= duration_limit:
-        middle_fix = middle_calcul(points_in_fixation)
-        cercle.append((middle_fix[0],middle_fix[1],rayon_dispersion,time_0,time_1-time_0))  #The center of the fixation is saved
-    Save_fixation(cercle,participant,image) 
-    return cercle
-
-def middle_calcul(points):
-    """Fonction qui retourne les coordonées du centre d'une succession de points"""
-    sum_x =0
-    sum_y =0
-    for point in points:
-        sum_x += point[0]
-        sum_y += point[1]
-    return [sum_x/len(points),sum_y/len(points)]
-
-
-
-#Fonction qui affiche les fixations sur l'image
-def dispersion_plot(time,image_name,x,y,cercle,extent,image,win_size): 
-    """Fonction qui affiche les fixations sur l'image"""
-    fig, ax = plt.subplots(2,sharex=False, sharey=False) 
-
-    #Pour la 1ere image 
-    ax[0].set_title('Dispersion gaze plot : '+image_name)
+def dispersion_plot(time,image_name,x,y,cercle,extent,image,win_size):
+    fig, ax = plt.subplots(2,sharex=False, sharey=False)
+    ax[0].set_title('Raw gaze plot : '+image_name)
     for center in cercle :
-        #print("centre ",center)
-        ax[0].add_artist(plt.Circle((center[0],center[1]),center[2],linewidth = 2, fill=0 ))#,color = 'red'
+        ax[0].add_artist(plt.Circle((center[0],center[1]),center[2],linewidth = 2, fill=0 ,color = 'red'))
 
     ax[0].imshow(image, extent=extent)    
     ax[0].set_xlim([-int(win_size[0])/2,int(win_size[0])/2])
@@ -195,62 +157,39 @@ def Disper_raw_plot(time,image_name,x,y,filename,extent,image,win_size,cercle):
     ax[1].legend()
     ax[0].axis('on')
     ax[0].legend()
-    plt.show()
-    
-#Fonction qui calcule la vitesse entre deux points, retourne un tableau de vitesse
-def speed_calcul(x,y,time):
-    """Fonction qui calcule la vitesse entre deux points"""
-    speed = []
-    for i in range(len(x)-1):
-        speed.append(mt.sqrt(((x[i+1]-x[i])**2+(y[i+1]-y[i])**2))/(time[i+1]-time[i]))
-    return speed #Liste en pixel par seconde
-
-#Fonction qui compare la vitesse entre deux points avec un seuil, et indique si le regard est fixé ou non 
-def fixation_velocity(speed,threshold_speed,x): 
-    """Fonction qui compare la vitesse entre deux points avec un seuil, et indique si le regard est fixé ou non"""
-    tab_fixation = []
-    #Conversion du seuil en seconde : 
-    threshold_speed = threshold_speed*1000
-    for i in range(len(x)-1):
-        #print('speed = ',speed[i])
-        if speed[i] < threshold_speed : # On a une fixation 
-            tab_fixation.append("Fixation")
-            
-        else : # On a un mouvement
-            tab_fixation.append("Saccade")
-            print('Saccade')
-        print('Nature :',tab_fixation[i])
-    return tab_fixation 
-
-#Fonction qui exporte tab_fixation dans un fichier csv
-#def Save_CSV(tab_fixation,nom,image):
-    #on transforme le tableau en dataframe afin d'être sauvegardé
-    #FIXATION_INFORMATION = pandas.DataFrame(tab_fixation, columns=['Fixation'])
-    #FIXATION_INFORMATION.insert(0, 'INFORMATIONS', pandas.Series([nom,image], index=[0,1]))
-    #on sauvegarde le fichier csv
-    #FIXATION_INFORMATION.to_csv('Fixation_information.csv', sep=';', index=False, encoding='utf-8')
-   
-
+    plt.show() 
 
 def Save_fixation(cercle,participant,image):
     #on ajoute le nom et numéro du participant de l'éxperience 
     participant = participant.split('_')
     nom = participant[2] + ' n° ' + participant[3][0:len(participant[3])-5]
     #on transforme le tableau en dataframe afin d'être sauvegardé
-    Cercle_array = np.array(cercle,dtype=[('Fixation_x','<i1'),('Fixation_y','<i1'),('rayon','<f2'),('Time Start','<f2'),('Duration','<f2')])
-    FIXATION_INFORMATION = pandas.DataFrame(Cercle_array, columns=['Fixation_x','Fixation_y','rayon','Time Start','Duration'])
-    #FIXATION_INFORMATION.insert(0, 'INFORMATIONS', pandas.Series([nom,image], index=[0,1]))
-    #print(FIXATION_INFORMATION)
+    Cercle_array = np.array(cercle,dtype=[('Fixation_x (px)','<i1'),('Fixation_y (px)','<i1'),('rayon (px)','<f4'),('Time Start (s)','<f4'),('Duration (s)','<f4')])
+    FIXATION_INFORMATION = pandas.DataFrame(Cercle_array, columns=['Fixation_x (px)','Fixation_y (px)','rayon (px)','Time Start (s)','Duration (s)'])
     if os.path.isfile(nom + '.xlsx'):
         with pandas.ExcelWriter(nom + '.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
             FIXATION_INFORMATION.to_excel(xls, sheet_name=image, index=True,)
     else:
         FIXATION_INFORMATION.to_excel(nom + '.xlsx', sheet_name=image, index=True,)
+
+def Save_Saccade(Saccade,participant,image):
+    #on ajoute le nom et numéro du participant de l'éxperience 
+    participant = participant.split('_')
+    nom = participant[2] + ' n° ' + participant[3][0:len(participant[3])-5]
     
-
-
+    #on transforme le tableau en dataframe afin d'être sauvegardé
+    Saccade_array = np.array(Saccade,dtype=[('Type',np.unicode_, 16), ('X_start (px)','<i1'), ('Y_start (px)','<i1'), ('X_end (px)','<i1'), ('Y_end (px)','<i1'),('Time Start (s)','<f4'),('Time End (s)','<f4'),('Duration (s)','<f4')])
+    SACCADE_INFORMATION = pandas.DataFrame(Saccade_array, columns=['Type','X_start (px)','Y_start (px)','X_end (px)','Y_end (px)','Time Start (s)','Time End (s)','Duration (s)'])
+    
+    if os.path.isfile(nom + 'saccade.xlsx'):
+        with pandas.ExcelWriter(nom + 'saccade.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
+            SACCADE_INFORMATION.to_excel(xls, sheet_name=image, index=True,)
+    else:
+        SACCADE_INFORMATION.to_excel(nom + 'saccade.xlsx', sheet_name=image, index=True,)
+    
 def find_first_index(lst, condition):
     return [i for i, elem in enumerate(lst) if condition(elem)][0]
+
 ################## Search image files used in /IMG_PATH ##################
 img_list = []
 
@@ -265,41 +204,85 @@ nb_image = np.size(img_list)
 ################## Dialog box to set visualization choice ##################
 # config the widget window
 win = tk.Tk()  # init the widget
-win.geometry('500x140')
+win.geometry('600x150')
 win.title('Plot parameters')
-
-# config the duration thresold
-w3 = ttk.Label(win, text = "Minimum fixation duration (ms) :")
-w3.grid(column = 0,row = 4, padx = 10, pady = 5)
-w3 = ttk.Entry(win)
-w3.insert(0,"150") #Valeur du temps
-w3.grid(row=4,column=1,padx=10,pady=5)  # adding to grid
-
-# config the dispersion radius
-w2 = ttk.Label(win, text = "Maximum fixation dispersion:")
-w2.grid(column = 0,row = 3, padx = 10, pady = 5)
-w2 = ttk.Entry(win)
-w2.insert(0,"30") #Valeur du rayon
-w2.grid(row=3,column=1,padx=10,pady=5)  # adding to grid
+Row = 1
 
 # config the box menu data choice
-w1 = ttk.Label(win, text = "Select binocular data :")
-w1.grid(column = 0,row = 1, padx = 10, pady = 5)
-w1 = ttk.Combobox(win, values = ['Left eye', 'Right eye', 'Average both eyes']) #box menu
-w1.grid(row=1,column=1,padx=10,pady=5)  # adding to grid
-w1.set('Average both eyes')             # default selected option
+data_choice = ttk.Label(win, text = "Select binocular data :")
+data_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
+data_choice = ttk.Combobox(win, values = ['Left eye', 'Right eye', 'Average both eyes']) #box menu
+data_choice.grid(row=Row,column=1,padx=10,pady=5)  # adding to grid
+data_choice.set('Average both eyes')             # default selected option
 
 # config the box menu plot choice
-w = ttk.Label(win, text = "Select plot type :")
-w.grid(column = 0,row = 2, padx = 10, pady = 5)
-w = ttk.Combobox(win, values = ['Dispersion_map', 'Raw_gaze_plot', 'Both']) #box menu
-w.grid(row=2,column=1,padx=10,pady=5)    # adding to grid
-w.set('Both')                   # default selected option
+Row += 1
+plot_choice = ttk.Label(win, text = "Select plot type :")
+plot_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
+plot_choice = ttk.Combobox(win, values = ['Dispersion_plot', 'Raw_gaze_plot', 'Both']) #box menu
+plot_choice.grid(row=Row,column=1,padx=10,pady=5)    # adding to grid
+plot_choice.set('Both')                   # default selected option
+
+# config the box menu methode choice
+Row += 1
+method_choice = ttk.Label(win, text = "Select method :")
+method_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
+method_choice = ttk.Combobox(win, values = ['Dispersion', 'Velocity']) #box menu
+method_choice.grid(row=Row,column=1,padx=10,pady=5)    # adding to grid
+method_choice.set('Dispersion')                   # default selected option
 
 #config the validation button
-b1=tk.Button(win,text="Submit", command=lambda: validate())
-b1.grid(row=3,column=3)
+b1=tk.Button(win,text="Submit", command=lambda: validate_win())
+b1.grid(row=Row,column=3)
 win.mainloop()
+
+if METHOD_CHOICE == 'Dispersion':
+    # config the widget window
+    win_dis = tk.Tk()  # init the widget
+    win_dis.geometry('600x100')
+    win_dis.title('Plot parameters')
+    Row = 1
+
+    # config the dispersion radius
+    Row += 1
+    radius_choice = ttk.Label(win_dis, text = "Maximum fixation dispersion:")
+    radius_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
+    radius_choice = ttk.Entry(win_dis)
+    radius_choice.insert(0,"150") #Valeur du rayon
+    radius_choice.grid(row=Row,column=1,padx=10,pady=5)  # adding to grid
+
+    # config the duration thresold
+    Row += 1
+    duration_choice = ttk.Label(win_dis, text = "Minimum fixation duration (ms) :")
+    duration_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
+    duration_choice = ttk.Entry(win_dis)
+    duration_choice.insert(0,"200") #Valeur du temps
+    duration_choice.grid(row=Row,column=1,padx=10,pady=5)  # adding to grid
+
+    #config the validation button
+    b1=tk.Button(win_dis,text="Submit", command=lambda: validate_win_dis())
+    b1.grid(row=Row,column=3)
+    win_dis.mainloop()
+
+elif METHOD_CHOICE == 'Velocity':
+    # config the widget window
+    win_vel = tk.Tk()  # init the widget
+    win_vel.geometry('600x100')
+    win_vel.title('Plot parameters')
+    Row = 1
+
+    # config the duration thresold
+    Row += 1
+    duration_choice = ttk.Label(win_vel, text = "Minimum fixation duration (ms) :")
+    duration_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
+    duration_choice = ttk.Entry(win_vel)
+    duration_choice.insert(0,"200") #Valeur du temps
+    duration_choice.grid(row=Row,column=1,padx=10,pady=5)  # adding to grid
+
+    #config the validation button
+    b1=tk.Button(win_vel,text="Submit", command=lambda: validate_win_vel())
+    b1.grid(row=Row,column=3)
+    win_vel.mainloop()
 
 ################## Search for each image the corresponding gaze data in all hdf file loaded  ##################
 nb_file  = np.size(FILENAME)
@@ -333,7 +316,7 @@ for s in range(nb_file):
 
         if len(index_img_labbel[0]) != 0 :  # if the data exist for this image ('img_list[i]' exists)                              
             
-            # read the time at which the image exploration pahse started
+            # read the time at which the image exploration phase started
             index_img_labbel = index_img_labbel[0][0]
             t_start_img   = events['text'][index_img_labbel-1].astype('U128').replace('IMAGE_START :','')
 
@@ -373,32 +356,24 @@ for s in range(nb_file):
         win_size = win_size.replace(']','')
         win_size = list(win_size.split(", "))
 
-        ################## Dispersion map plot #######################
-        if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Dispersion_map': # if data exist
-            # --- Display the histogram overlap on the reference image --- #
-            List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE,FILENAME[s],img_list[i])
-            #def dispersion_map(time,gaze_x, gaze_y,radius,duration,participant, image
-            dispersion_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],List_Circle,extent,img,win_size)
-            speed = speed_calcul(img_gaze[0],img_gaze[1],img_gaze[2])
-            fixation_velocity(speed,(0.0005),img_gaze[2],img_gaze[0],img_gaze[1])
-            #Save_CSV(fixation_velocity,"Dispersion_map.csv",FILENAME[s])
-            
         ################## Raw gaze data plot ##################
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Raw_gaze_plot': # if data exist
             # --- Display raw gaze data overlap on the reference image --- #
             raw_gaze_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size)
-            speed = speed_calcul(img_gaze[0],img_gaze[1],img_gaze[2])
-            fixation_velocity(speed,(0.0005),img_gaze[2],img_gaze[0],img_gaze[1])
-            #Save_CSV(fixation_velocity,"Raw_data_subplot.csv",FILENAME[s])
-        
-        ################## Dispersion map & raw data subplot #######################
-        if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Both':
-            # --- Display raw gaze + heatmap overlap on the reference image --- #
-            List_Circle = dispersion_map(img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE,FILENAME[s],img_list[i])
-            Disper_raw_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size,List_Circle) 
-            speed = speed_calcul(img_gaze[0],img_gaze[1],img_gaze[2])
-            fixation_velocity(speed,(0.0005),img_gaze[2],img_gaze[0],img_gaze[1])
-            #Save_CSV(fixation_velocity,"Dispersion_map_&_Raw_data_subplot.csv",FILENAME[s])
+            
 
-        
-    
+        ################## Dispersion map plot #######################
+        elif len(img_gaze[0]) != 0 and (PLOT_CHOICE == 'Dispersion_plot' or PLOT_CHOICE == 'Both'): # if data exist
+            # --- Display the histogram overlap on the reference image --- #
+            if METHOD_CHOICE == 'Dispersion':
+                Fixation,Saccade = IDT.Choix_Methode_Dispersion("Salvucci",img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
+            elif METHOD_CHOICE == 'Velocity':
+                print ("Not ended")
+                break
+            Save_fixation(Fixation,FILENAME[s],img_list[i])
+            Save_Saccade(Saccade,FILENAME[s],img_list[i])
+
+            if PLOT_CHOICE == 'Dispersion_plot':
+                dispersion_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],Fixation,extent,img,win_size)
+            elif PLOT_CHOICE == 'Both':
+                Disper_raw_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size,Fixation) 

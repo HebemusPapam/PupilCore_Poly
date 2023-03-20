@@ -110,7 +110,7 @@ def Dispersion_overlap(img1,fixation,x,y,t1,t2):
     for center in fixation :
         start = center[3]
         stop = center[3] + center[4]
-        if (t1>start and t1<stop) or (t2>start and t2<stop):
+        if (t1>start and t1<stop) or (t2>start and t2<stop) or (t1<start and t2>stop):
             for u in range(len(x)):
                 if ~(np.isnan(x[u]) or np.isnan(y[u])): # if gaze data is not NaN
                     radius = center[2]
@@ -159,16 +159,6 @@ def plot_frame_gaze_2(frame_count):
             #check if the start of dispersion is contained in the time bewteen the two frames
             image = Dispersion_overlap(image,Fixation,x,y,t1,t2)
 
-            """start = Fixation[N_fix][3]
-            stop = Fixation[N_fix][3] + Fixation[N_fix][4]
-            print(start," et ",stop, "///////",t1," et ",t2)
-            if (t1>start and t1<stop) or (t2>start and t2<stop):
-                print("fix")
-                image = Dispersion_overlap(image,Fixation,N_fix,x,y,t1,t2)
-
-            #if current time is superior compared to the starting time of the fixation + its duration
-            elif t1>stop:
-                N_fix = N_fix+1 #Next fixation"""
 
     else: #if the current frame has been dropped in psychopy experiment
         image = reset_overlap() # remove previous frame gaze overlap

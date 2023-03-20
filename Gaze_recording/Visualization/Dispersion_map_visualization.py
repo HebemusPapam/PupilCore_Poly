@@ -72,9 +72,9 @@ def validate_win_vel():
     Get the user choice made in the widget's menu
     """
         
-    global DURATION_CHOICE
+    global THRESOLD_SPEED
         
-    DURATION_CHOICE = 0.001 * float(duration_choice.get())
+    THRESOLD_SPEED = 0.001 * float(thresold_speed.get())
     win_vel.destroy()
 
 def dispersion_plot(time,image_name,x,y,cercle,extent,image,win_size):
@@ -271,13 +271,13 @@ elif METHOD_CHOICE == 'Velocity':
     win_vel.title('Plot parameters')
     Row = 1
 
-    # config the duration thresold
+    # config the thresoldspeed
     Row += 1
-    duration_choice = ttk.Label(win_vel, text = "Minimum fixation duration (ms) :")
-    duration_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
-    duration_choice = ttk.Entry(win_vel)
-    duration_choice.insert(0,"200") #Valeur du temps
-    duration_choice.grid(row=Row,column=1,padx=10,pady=5)  # adding to grid
+    thresold_speed = ttk.Label(win_vel, text = "Minimum thresoldspeed (px/s) :")
+    thresold_speed.grid(column = 0,row = Row, padx = 10, pady = 5)
+    thresold_speed = ttk.Entry(win_vel)
+    thresold_speed.insert(0,"200") #Valeur de ref
+    thresold_speed.grid(row=Row,column=1,padx=10,pady=5)  # adding to grid
 
     #config the validation button
     b1=tk.Button(win_vel,text="Submit", command=lambda: validate_win_vel())
@@ -368,6 +368,7 @@ for s in range(nb_file):
             if METHOD_CHOICE == 'Dispersion':
                 Fixation,Saccade = IDT.Choix_Methode_Dispersion("Salvucci",img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
             elif METHOD_CHOICE == 'Velocity':
+                Fixation,Saccade = IVT.fixation_velocity(THRESOLD_SPEED,img_gaze[0],img_gaze[1],img_gaze[2])
                 print ("Not ended")
                 break
             Save_fixation(Fixation,FILENAME[s],img_list[i])

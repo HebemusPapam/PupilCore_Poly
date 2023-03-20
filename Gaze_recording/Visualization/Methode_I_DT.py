@@ -2,8 +2,6 @@ import numpy as np
 import math as mt
 
 def Choix_Methode_Dispersion(methode,time,gaze_x,gaze_y,radius,duration):
-    #dispersion_map_Salvador(time,gaze_x,gaze_y,radius,duration)
-    dispersion_map_Eucl(time,gaze_x,gaze_y,30,duration)
     if methode=="Salvucci" :
         return dispersion_map_Salvucci(time,gaze_x,gaze_y,radius,duration)
     elif methode=="Eucl":

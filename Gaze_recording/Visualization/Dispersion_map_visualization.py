@@ -276,7 +276,7 @@ elif METHOD_CHOICE == 'Velocity':
     thresold_speed = ttk.Label(win_vel, text = "Minimum thresoldspeed (px/s) :")
     thresold_speed.grid(column = 0,row = Row, padx = 10, pady = 5)
     thresold_speed = ttk.Entry(win_vel)
-    thresold_speed.insert(0,"200") #Valeur de ref
+    thresold_speed.insert(0,"1000") #Valeur de ref
     thresold_speed.grid(row=Row,column=1,padx=10,pady=5)  # adding to grid
 
     #config the validation button

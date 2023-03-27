@@ -101,6 +101,7 @@ def dispersion_plot(time,image_name,x,y,cercle,extent,image,win_size):
     ax[0].axis('on')
     ax[0].legend()
     plt.show()
+    
 
 def raw_gaze_plot(time,image_name,x,y,filename,extent,image,win_size):
     """Fonction qui affiche les points de regard sur l'image"""

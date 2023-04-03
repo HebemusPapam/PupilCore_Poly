@@ -30,7 +30,7 @@ elif platform.system() == 'Darwin':
 
 
 #FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
-FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5']
+FILENAME =  ['ExploIMG_Tobii_d_001.hdf5']
 
 # parameters useful just to init gaze data array's size which must be above T_IMG*F_TRACKER_MAX
 T_IMG = 7           # duration of the image exploration phase in seconds

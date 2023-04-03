@@ -123,6 +123,10 @@ def dispersion_map_Salvucci(time,gaze_x,gaze_y,radius,duration):
         #Si le rayon n'a pas changé alors on a une saccade (aucune fixation dans le laps de temps étudié)
         else:
             No_Saccade = False
+            end = start
+            #Notre saccade dure tous la durée de la fenêtre donc on la recalibre pour ne prendre en compte que les 80 premières ms de cette fenêtre
+            while time[end]-time[start]<0.08:
+                end+=1
             saccade.append(("Normal",gaze_x[start],gaze_y[start],gaze_x[end],gaze_y[end],time[start],time[end],time[end]-time[start]))
             start = end-1
             dispersion = 0

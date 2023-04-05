@@ -160,17 +160,14 @@ def Disper_raw_plot(time,image_name,x,y,filename,extent,image,win_size,cercle):
     ax[0].legend()
     plt.show() 
 
-def Save_fixation(cercle,participant,image):
+def Save_fixation(Fixation,participant,image):
     #on ajoute le nom et numéro du participant de l'éxperience 
     participant = participant.split('_')
     nom = participant[2] + ' n° ' + participant[3][0:len(participant[3])-5]
 
     #on transforme le tableau en dataframe afin d'être sauvegardé
-    if METHOD_CHOICE == 'Dispersion':
-        Cercle_array = np.array(cercle,dtype=[('Fixation_x (px)','<i1'),('Fixation_y (px)','<i1'),('rayon (px)','<f4'),('Time Start (s)','<f4'),('Duration (s)','<f4')])
-        FIXATION_INFORMATION = pandas.DataFrame(Cercle_array, columns=['Fixation_x (px)','Fixation_y (px)','rayon (px)','Time Start (s)','Duration (s)'])
-    if METHOD_CHOICE == 'Velocity':
-        FIXATION_INFORMATION = 0
+    Fixation_array = np.array(Fixation,dtype=[('Fixation_x (px)','<i1'),('Fixation_y (px)','<i1'),('rayon (px)','<f4'),('Time Start (s)','<f4'),('Duration (s)','<f4')])
+    FIXATION_INFORMATION = pandas.DataFrame(Fixation_array, columns=['Fixation_x (px)','Fixation_y (px)','rayon (px)','Time Start (s)','Duration (s)'])
 
     if os.path.isfile(nom + ' fixation.xlsx'):
         with pandas.ExcelWriter(nom + ' fixation.xlsx', mode="a", engine="openpyxl", if_sheet_exists="replace", ) as xls:
@@ -184,12 +181,8 @@ def Save_Saccade(Saccade,participant,image):
     nom = participant[2] + ' n° ' + participant[3][0:len(participant[3])-5]
     
     #on transforme le tableau en dataframe afin d'être sauvegardé
-    if METHOD_CHOICE == 'Dispersion':
-        Saccade_array = np.array(Saccade,dtype=[('Type',np.unicode_, 16), ('X_start (px)','<i1'), ('Y_start (px)','<i1'), ('X_end (px)','<i1'), ('Y_end (px)','<i1'),('Time Start (s)','<f4'),('Time End (s)','<f4'),('Duration (s)','<f4')])
-        SACCADE_INFORMATION = pandas.DataFrame(Saccade_array, columns=['Type','X_start (px)','Y_start (px)','X_end (px)','Y_end (px)','Time Start (s)','Time End (s)','Duration (s)'])
-    if METHOD_CHOICE == 'Velocity':
-        FIXATION_INFORMATION = 0
-        
+    Saccade_array = np.array(Saccade,dtype=[('Type',np.unicode_, 16), ('X_start (px)','<i1'), ('Y_start (px)','<i1'), ('X_end (px)','<i1'), ('Y_end (px)','<i1'),('Time Start (s)','<f4'),('Time End (s)','<f4'),('Duration (s)','<f4')])
+    SACCADE_INFORMATION = pandas.DataFrame(Saccade_array, columns=['Type','X_start (px)','Y_start (px)','X_end (px)','Y_end (px)','Time Start (s)','Time End (s)','Duration (s)'])
 
     if os.path.isfile(nom + ' saccade.xlsx'):
         with pandas.ExcelWriter(nom + ' saccade.xlsx', mode="a", engine="openpyxl", if_sheet_exists="replace", ) as xls:
@@ -229,9 +222,9 @@ data_choice.set('Average both eyes')             # default selected option
 Row += 1
 plot_choice = ttk.Label(win, text = "Select plot type :")
 plot_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
-plot_choice = ttk.Combobox(win, values = ['Dispersion_plot', 'Raw_gaze_plot', 'Both']) #box menu
+plot_choice = ttk.Combobox(win, values = ['None', 'Dispersion_plot', 'Raw_gaze_plot', 'Both']) #box menu
 plot_choice.grid(row=Row,column=1,padx=10,pady=5)    # adding to grid
-plot_choice.set('Both')                   # default selected option
+plot_choice.set('None')                   # default selected option
 
 # config the box menu methode choice
 Row += 1
@@ -239,7 +232,7 @@ method_choice = ttk.Label(win, text = "Select method :")
 method_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
 method_choice = ttk.Combobox(win, values = ['Dispersion', 'Velocity']) #box menu
 method_choice.grid(row=Row,column=1,padx=10,pady=5)    # adding to grid
-method_choice.set('Dispersion')                   # default selected option
+method_choice.set('Velocity')                   # default selected option
 
 #config the validation button
 b1=tk.Button(win,text="Submit", command=lambda: validate_win())
@@ -373,14 +366,13 @@ for s in range(nb_file):
             
 
         ################## Dispersion map plot #######################
-        elif len(img_gaze[0]) != 0 and (PLOT_CHOICE == 'Dispersion_plot' or PLOT_CHOICE == 'Both'): # if data exist
+        elif len(img_gaze[0]) != 0 and (PLOT_CHOICE == 'Dispersion_plot' or PLOT_CHOICE == 'Both' or PLOT_CHOICE == 'None'): # if data exist
             # --- Display the histogram overlap on the reference image --- #
             if METHOD_CHOICE == 'Dispersion':
                 Fixation,Saccade = IDT.Choix_Methode_Dispersion("Salvucci",img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
             elif METHOD_CHOICE == 'Velocity':
-                Fixation,Saccade = IVT.fixation_velocity(THRESOLD_SPEED,img_gaze[0],img_gaze[1],img_gaze[2])
-                print ("Not ended")
-                break
+                Fixation,Saccade = IVT.Velocity(THRESOLD_SPEED,img_gaze[0],img_gaze[1],img_gaze[2])
+            
             Save_fixation(Fixation,FILENAME[s],img_list[i])
             Save_Saccade(Saccade,FILENAME[s],img_list[i])
 
@@ -388,3 +380,5 @@ for s in range(nb_file):
                 dispersion_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],Fixation,extent,img,win_size)
             elif PLOT_CHOICE == 'Both':
                 Disper_raw_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size,Fixation) 
+            else:
+                pass

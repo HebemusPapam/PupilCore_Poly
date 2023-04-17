@@ -61,7 +61,7 @@ EXPERIMENT_PATH = 'D:\\Cours\\IESE4\\PupilCore_POLYTECH\\PupilCore_Poly\\Gaze_re
 VIDEO_PATH = EXPERIMENT_PATH + 'video\\'        # directory pathway of the videos used during experiment
 FRAME_PATH = EXPERIMENT_PATH + 'frame_timing\\' # directory pathway of the frame timing txt files
 HDF_PATH   = EXPERIMENT_PATH + 'data\\'         # directory pathway of the HDF files recorded
-FILENAME = 'video_explo_Tobii_s_002.hdf5'        # hdf5 file to visualize
+FILENAME = 'video_explo_new_code_marion_002.hdf5'        # hdf5 file to visualize
 R = 10 # diameter/2 of the gaze cross visualization (must be pair)
 
 

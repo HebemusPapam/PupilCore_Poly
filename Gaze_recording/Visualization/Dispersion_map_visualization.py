@@ -1,6 +1,8 @@
 ################## Import package ##################
 from tkinter import ttk
 import tkinter as tk
+# import filedialog module
+from tkinter import filedialog
 import math as mt
 import warnings
 import os
@@ -30,7 +32,7 @@ elif platform.system() == 'Darwin':
 
 
 #FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
-FILENAME =  ['ExploIMG_Tobii_d_001.hdf5']
+FILENAME =  'ExploIMG_PupilCore_m_001.hdf5'
 
 # parameters useful just to init gaze data array's size which must be above T_IMG*F_TRACKER_MAX
 T_IMG = 7           # duration of the image exploration phase in seconds
@@ -212,8 +214,22 @@ nb_image = np.size(img_list)
 ################## Dialog box to set visualization choice ##################
 # config the widget window
 win = tk.Tk()  # init the widget
-win.geometry('500x140')
+win.geometry('550x170')
 win.title('Plot parameters')
+
+# Function for opening the
+# file explorer window
+def browseFiles():
+    global FILENAME
+    FILENAME = filedialog.askopenfilename(initialdir = HDF_PATH,title = "Select a File",filetypes = (("hd5f files","*.hdf5*"),("all files","*.*")))
+    FILENAME = FILENAME.split('/')[-1]
+    w4.configure(text = FILENAME)
+
+# choose the file
+b2=tk.Button(win,text="Select a data file", command= browseFiles)
+b2.grid(row=0,column=0,padx=10,pady=5)  # adding to grid
+w4 = ttk.Label(win, text =  FILENAME)
+w4.grid(column = 1,row = 0, padx = 10, pady = 5)
 
 # config the duration thresold
 w3 = ttk.Label(win, text = "Minimum fixation duration (ms) :")
@@ -257,7 +273,7 @@ for s in range(nb_file):
 
     # --- Import hdf file data --- #
     # Open hierachical element contained in the HDF data file
-    f = h5py.File(HDF_PATH+FILENAME[s],'r')
+    f = h5py.File(HDF_PATH+FILENAME,'r')
  
     # Init 2d arrays to store gaze data for raw gaze plot (size=nb_file,nb_sample_per_trials)
     gaze_x_raw = np.empty((FRAMES,nb_file))*np.nan
@@ -309,8 +325,12 @@ for s in range(nb_file):
                         img_gaze   = np.array([avg_gaze_x, avg_gaze_y,gaze_time])
                 
                 #get all the value of time for each gaze and each image
-                
+                img_gaze = img_gaze.T
+
+                # remove samples with NaN value in one of the (x,y) coordinates = Blink
                 img_gaze = img_gaze[~np.isnan(img_gaze).any(axis=1)]
+                
+                img_gaze = img_gaze.T
             
        
 
@@ -323,9 +343,9 @@ for s in range(nb_file):
         ################## Dispersion map plot #######################
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Dispersion_map': # if data exist
             # --- Display the histogram overlap on the reference image --- #
-            Fixation,Saccade = IDT.Choix_Methode_Dispersion("Salvucci",img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE,FILENAME[s],img_list[i])
-            Save_fixation(Fixation,FILENAME[s],img_list[i])
-            Save_Saccade(Saccade,FILENAME[s],img_list[i])
+            Fixation,Saccade = IDT.Choix_Methode_Dispersion("Salvucci",img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE,FILENAME,img_list[i])
+            Save_fixation(Fixation,FILENAME,img_list[i])
+            Save_Saccade(Saccade,FILENAME,img_list[i])
             dispersion_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],Fixation,extent,img,win_size)
             
 
@@ -339,9 +359,9 @@ for s in range(nb_file):
         if len(img_gaze[0]) != 0 and PLOT_CHOICE == 'Both':
             # --- Display raw gaze + heatmap overlap on the reference image --- #
             Fixation,Saccade = IDT.Choix_Methode_Dispersion("Salvucci",img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
-            Save_fixation(Fixation,FILENAME[s],img_list[i])
-            Save_Saccade(Saccade,FILENAME[s],img_list[i]) 
-            Disper_raw_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size,Fixation) 
+            Save_fixation(Fixation,FILENAME,img_list[i])
+            Save_Saccade(Saccade,FILENAME,img_list[i]) 
+            Disper_raw_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size,Fixation) 
          
         
 

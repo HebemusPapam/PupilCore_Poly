@@ -1,48 +1,51 @@
 import math as mt
 
+threshold_time = 0.04 # Seuil de temps pour définir une saccade minimum (en secondes)
+
 #Fonction qui calcule la vitesse entre deux points, retourne un tableau de vitesse
 def speed_calcul(x,y,time):
     """Fonction qui calcule la vitesse entre deux points"""
     speed_calcul = []
-    for i in range(len(x)-1):
+    for i in range(len(x)):
         speed_calcul.append(mt.sqrt(((x[i+1]-x[i])**2+(y[i+1]-y[i])**2))/(time[i+1]-time[i]))
     return speed_calcul #Liste en pixel par seconde
 
 def middle_calcul(x,y):
-    """Fonction qui retourne les coordonées du centre d'une succession de points"""
-    sum_x = 0
-    sum_y = 0
-    for xp in x:
-        sum_x += xp
-    for yp in y:
-        sum_y += yp
-    return [sum_x/len(x),sum_y/len(y)]
+    """Fonction qui calcule le centre de la fixation en utilisant la méthode du barycentre"""
+    n = len(x)
+    if n == 0:
+        return [0, 0]
+    else:
+        sum_x = sum(x)
+        sum_y = sum(y)
+        barycenter_x = sum_x / n
+        barycenter_y = sum_y / n
+        return [barycenter_x, barycenter_y]
 
-def Check_Fixation(time, start, end, x, y, threshold_time):
+def Check_Fixation(threshold_speed, time, start, end, x, y):
     """Fonction qui vérifie si la fixation est valide"""
-    if (time[end]-time[start]) > threshold_time:
+    speed = ((x[end] - x[start])**2 + (y[end] - y[start])**2) / (time[end] - time[start])
+    if speed < threshold_speed:
         #On a une fixation
-        middle_fix = middle_calcul(x[start:end],y[start:end])
-        return True, middle_fix
+        return True
     else:
         #On a une saccade
-        return False, [0,0]
+        return False
 
-def Check_micro_saccade(time, start, end, x, y, threshold_time):
+def Check_micro_saccade(time, start, end, x, y):
     """Fonction qui vérifie si la micro-saccade est valide"""
-    if (time[end]-time[start]) > threshold_time:
-        #On a une fixation
-        middle_fix = middle_calcul(x[start:end],y[start:end])
-        return True, middle_fix
+    time = (time[end] - time[start])
+    if time < threshold_time:
+        #On a une micro_saccade
+        
+        return True, 
     else:
-        #On a une saccade
-        return False, [0,0]
+        #On a une fixation
+        return False
 
 def Velocity(threshold_speed, x, y, time): # Le tableau time est en secondes 
     """Fonction qui compare la vitesse entre deux points avec un seuil """
     All_Points_Not_Searched = True #Flag pour savoir si on a parcouru tous les points
-    threshold_time = 0.04 # Seuil de temps pour définir une saccade minimum (en secondes)
-    threshold_speed = threshold_speed*1000 #Conversion du seuil en seconde :
     start = 0
     end = 0
     rayon_dispersion = 150
@@ -55,9 +58,7 @@ def Velocity(threshold_speed, x, y, time): # Le tableau time est en secondes
     All_Points_Not_Searched = True
     Micro_Saccade = False
     Saccade = False
-    Test_Fixation = False
 
-    speed = speed_calcul(x,y,time)
     while(All_Points_Not_Searched):
         if Micro_Saccade :
             #On a eu une micro saccade donc on doit recommencer à chercher les fixations depuis l'index où l'on s'est arrêté
@@ -70,31 +71,29 @@ def Velocity(threshold_speed, x, y, time): # Le tableau time est en secondes
         else: 
             All_Points_Not_Searched = False
         
-        
-        Test_Fixation, middle_fix = Check_Fixation(time, start, end, x, y, threshold_time)
-        
-        if Test_Fixation:
-            
-            #Micro_Saccade, middle_fix = Check_micro_saccade(time, start, end, x, y, threshold_time)
+        if Check_Fixation(threshold_speed, time, start, end, x, y):
+            #########Condition Temporel sur une fixation############
 
-            if not Micro_Saccade:
+            if not Check_micro_saccade(time, start, end, x, y):
                 #########Condition Temporel sur une fixation############
+                #une fixation ne doit pas être confondu avec un blink donc t > 40ms
                 
-                print("Fixation")
+                print("Fixation : ",start," ",end," ",time[end]-time[start])
+                middle_fix = middle_calcul(x[start:end],y[start:end])
                 rayon_dispersion += rayon_dispersion * 0.001 * (end-start)
                 tab_fixation.append((middle_fix[0],middle_fix[1],rayon_dispersion/3,time[start],time[end-1]-time[start]))  #The center of the fixation is saved
 
         else:
             #########Condition Temporel sur une saccade############
             
-            print("Saccade")
+            #print("Saccade")
             tab_saccade.append(("Saccade",x[start],y[start],x[end],y[end],time[start],time[end],time[end]-time[start]))
             start = end - 1
             rayon_dispersion = 150
             Saccade = True
           
         
-        while(not Saccade and All_Points_Not_Searched):
+        while(not Saccade and All_Points_Not_Searched and not Micro_Saccade):
             start = end
             #########Condition Temporel sur une saccade############
             #une saccade ne doit pas être confondu avec un blink donc t > 40ms

@@ -75,7 +75,7 @@ def validate_win_vel():
         
     global THRESOLD_SPEED
         
-    THRESOLD_SPEED = 0.001 * float(thresold_speed.get())
+    THRESOLD_SPEED = float(thresold_speed.get())
     win_vel.destroy()
 
 def dispersion_plot(time,image_name,x,y,cercle,extent,image,win_size):

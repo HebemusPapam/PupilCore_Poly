@@ -1,12 +1,19 @@
 import math as mt
 
-threshold_time = 0.04 # Seuil de temps pour définir une saccade minimum (en secondes)
+def Suivant(x, end, FLAG_End):
+    """Fonction qui permet de passer au point suivant"""
 
-#Fonction qui calcule la vitesse entre deux points, retourne un tableau de vitesse
-def speed_calcul(x,y,time):
+    if end < (len(x)-2):
+        end += 1
+    else:
+        FLAG_End = True
+    return end, FLAG_End
+
+def speed_calcul(x, y, time):
     """Fonction qui calcule la vitesse entre deux points"""
+
     speed_calcul = []
-    for i in range(len(x)):
+    for i in range(len(x)-1):
         speed_calcul.append(mt.sqrt(((x[i+1]-x[i])**2+(y[i+1]-y[i])**2))/(time[i+1]-time[i]))
     return speed_calcul #Liste en pixel par seconde
 
@@ -22,95 +29,63 @@ def middle_calcul(x,y):
         barycenter_y = sum_y / n
         return [barycenter_x, barycenter_y]
 
-def Check_Fixation(threshold_speed, time, start, end, x, y):
-    """Fonction qui vérifie si la fixation est valide"""
-    speed = ((x[end] - x[start])**2 + (y[end] - y[start])**2) / (time[end] - time[start])
-    if speed < threshold_speed:
-        #On a une fixation
-        return True
-    else:
-        #On a une saccade
-        return False
 
-def Check_micro_saccade(time, start, end, x, y):
-    """Fonction qui vérifie si la micro-saccade est valide"""
-    time = (time[end] - time[start])
-    if time < threshold_time:
-        #On a une micro_saccade
-        
-        return True, 
-    else:
-        #On a une fixation
-        return False
-
-def Velocity(threshold_speed, x, y, time): # Le tableau time est en secondes 
+def Velocity(x, y, time, threshold_speed):
     """Fonction qui compare la vitesse entre deux points avec un seuil """
-    All_Points_Not_Searched = True #Flag pour savoir si on a parcouru tous les points
-    start = 0
-    end = 0
-    rayon_dispersion = 150
-
+    #Initialisation des variables
     tab_fixation = []
     tab_saccade = []
-    middle_fix = [0,0]
+    tab_speed = []
+    start_sac = 0
+    start_fix = 0
+    end = 1
+    rayon_dispersion = 150
+    duration_micro_saccade = 0.025
 
-    #Flag pour les différents évenements possible
-    All_Points_Not_Searched = True
-    Micro_Saccade = False
-    Saccade = False
 
-    while(All_Points_Not_Searched):
-        if Micro_Saccade :
-            #On a eu une micro saccade donc on doit recommencer à chercher les fixations depuis l'index où l'on s'est arrêté
-            #car on a supprimé le point en dehors de la fixation du tableau de point gaze_x et gaze_y
-            Micro_Saccade = False
+    FLAG_End = False
+    FLAG_Micro_Saccade = True
+    FLAG_Fixation = False
 
-        elif end < len(x)-2 : 
-            end += 1
+    tab_speed = speed_calcul(x, y, time)
 
-        else: 
-            All_Points_Not_Searched = False
-        
-        if Check_Fixation(threshold_speed, time, start, end, x, y):
-            #########Condition Temporel sur une fixation############
 
-            if not Check_micro_saccade(time, start, end, x, y):
-                #########Condition Temporel sur une fixation############
-                #une fixation ne doit pas être confondu avec un blink donc t > 40ms
+    while not FLAG_End:
+
+        while FLAG_Micro_Saccade and not FLAG_End:
+            start_sac = end
+            while tab_speed[end] > threshold_speed and not FLAG_End:
+                "Saccade"
+                end, FLAG_End = Suivant(x, end, FLAG_End)
+
+            "Fin de la saccade"
+            if time[end] - time[start_sac] > duration_micro_saccade:
+                "Saccade"
+                FLAG_Micro_Saccade = False
+                tab_saccade.append(("Saccade",x[start_sac],y[start_sac],x[end],y[end],time[start_sac],time[end],time[end]-time[start_sac]))
                 
-                print("Fixation : ",start," ",end," ",time[end]-time[start])
-                middle_fix = middle_calcul(x[start:end],y[start:end])
-                rayon_dispersion += rayon_dispersion * 0.001 * (end-start)
-                tab_fixation.append((middle_fix[0],middle_fix[1],rayon_dispersion/3,time[start],time[end-1]-time[start]))  #The center of the fixation is saved
+            else:
+                "Micro_Saccade"
+                FLAG_Micro_Saccade = True
+                
+            if FLAG_Micro_Saccade:
+                if start_fix == -1:
+                    start_fix = end
+                while tab_speed[end] <= threshold_speed and not FLAG_End:
+                    "Fixation"
+                    end, FLAG_End = Suivant(x, end, FLAG_End)
+                "Fin de la fixation"
+                FLAG_Fixation = True
 
-        else:
-            #########Condition Temporel sur une saccade############
-            
-            #print("Saccade")
-            tab_saccade.append(("Saccade",x[start],y[start],x[end],y[end],time[start],time[end],time[end]-time[start]))
-            start = end - 1
+        if FLAG_Fixation:
+            "Fixation"
+            middle_fix = middle_calcul(x[start_fix:end],y[start_fix:end])
+            rayon_dispersion += rayon_dispersion * 0.001 * (end-start_fix)
+            tab_fixation.append((middle_fix[0],middle_fix[1],rayon_dispersion/3,time[start_fix],time[end-1]-time[start_fix]))  #The center of the fixation is saved
+    
+            FLAG_Fixation = False
+            FLAG_Micro_Saccade = True
+            start_fix = -1
             rayon_dispersion = 150
-            Saccade = True
-          
         
-        while(not Saccade and All_Points_Not_Searched and not Micro_Saccade):
-            start = end
-            #########Condition Temporel sur une saccade############
-            #une saccade ne doit pas être confondu avec un blink donc t > 40ms
-            while((time[end]-time[start])<threshold_time and All_Points_Not_Searched):
-                if end<(len(x)-2):
-                    end+=1
-                else:
-                    All_Points_Not_Searched = False
-            Saccade = True
-            tab_saccade.append(("Saccade",x[start],y[start],x[end],y[end],time[start],time[end],time[end]-time[start]))
-            start = end-1    
-
-        Saccade = False   
-        Micro_Saccade = False 
-
-
     return tab_fixation, tab_saccade
- 
-
- 

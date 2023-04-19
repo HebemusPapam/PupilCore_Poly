@@ -224,7 +224,7 @@ plot_choice = ttk.Label(win, text = "Select plot type :")
 plot_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
 plot_choice = ttk.Combobox(win, values = ['None', 'Dispersion_plot', 'Raw_gaze_plot', 'Both']) #box menu
 plot_choice.grid(row=Row,column=1,padx=10,pady=5)    # adding to grid
-plot_choice.set('None')                   # default selected option
+plot_choice.set('Both')                   # default selected option
 
 # config the box menu methode choice
 Row += 1
@@ -232,7 +232,7 @@ method_choice = ttk.Label(win, text = "Select method :")
 method_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
 method_choice = ttk.Combobox(win, values = ['Dispersion', 'Velocity']) #box menu
 method_choice.grid(row=Row,column=1,padx=10,pady=5)    # adding to grid
-method_choice.set('Velocity')                   # default selected option
+method_choice.set('Dispersion')                   # default selected option
 
 #config the validation button
 b1=tk.Button(win,text="Submit", command=lambda: validate_win())
@@ -371,8 +371,8 @@ for s in range(nb_file):
             if METHOD_CHOICE == 'Dispersion':
                 Fixation,Saccade = IDT.Choix_Methode_Dispersion("Salvucci",img_gaze[2],img_gaze[0],img_gaze[1],RADIUS_CHOICE,DURATION_CHOICE)
             elif METHOD_CHOICE == 'Velocity':
-                Fixation,Saccade = IVT.Velocity(THRESOLD_SPEED,img_gaze[0],img_gaze[1],img_gaze[2])
-            
+                Fixation,Saccade = IVT.Velocity(img_gaze[0],img_gaze[1],img_gaze[2],THRESOLD_SPEED)
+                
             Save_fixation(Fixation,FILENAME[s],img_list[i])
             Save_Saccade(Saccade,FILENAME[s],img_list[i])
 

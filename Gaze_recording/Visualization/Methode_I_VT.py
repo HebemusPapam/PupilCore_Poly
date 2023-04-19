@@ -40,7 +40,7 @@ def Velocity(x, y, time, threshold_speed):
     start_fix = 0
     end = 1
     rayon_dispersion = 150
-    duration_micro_saccade = 0.025
+    duration_micro_saccade = 0.035
 
 
     FLAG_End = False

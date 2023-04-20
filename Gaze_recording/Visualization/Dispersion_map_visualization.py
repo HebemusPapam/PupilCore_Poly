@@ -32,7 +32,7 @@ elif platform.system() == 'Darwin':
 
 
 #FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
-FILENAME =  'ExploIMG_PupilCore_m_001.hdf5'
+FILENAME =  'ExploIMG_new_code_marion_001.hdf5'
 
 # parameters useful just to init gaze data array's size which must be above T_IMG*F_TRACKER_MAX
 T_IMG = 7           # duration of the image exploration phase in seconds
@@ -143,23 +143,23 @@ def Disper_raw_plot(time,image_name,x,y,filename,extent,image,win_size,cercle):
 
 def Save_fixation(cercle,participant,image):
     #on ajoute le nom et numéro du participant de l'éxperience 
-    participant = participant.split('_')
-    nom = participant[2] + ' n° ' + participant[3][0:len(participant[3])-5]
+    participant = participant.split('.')
+    nom = participant[0]
     #on transforme le tableau en dataframe afin d'être sauvegardé
     Cercle_array = np.array(cercle,dtype=[('Fixation_x (px)','<i1'),('Fixation_y (px)','<i1'),('rayon (px)','<f4'),('Time Start (s)','<f4'),('Duration (s)','<f4')])
     FIXATION_INFORMATION = pandas.DataFrame(Cercle_array, columns=['Fixation_x (px)','Fixation_y (px)','rayon (px)','Time Start (s)','Duration (s)'])
     print(Cercle_array)
     print(FIXATION_INFORMATION)
-    if os.path.isfile(nom + '.xlsx'):
-        with pandas.ExcelWriter(nom + '.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
+    if os.path.isfile(nom + '_Fixation.xlsx'):
+        with pandas.ExcelWriter(nom + '_Fixation.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
             FIXATION_INFORMATION.to_excel(xls, sheet_name=image, index=True,)
     else:
-        FIXATION_INFORMATION.to_excel(nom + '.xlsx', sheet_name=image, index=True,)
+        FIXATION_INFORMATION.to_excel(nom + '_Fixation.xlsx', sheet_name=image, index=True,)
 
 def Save_Saccade(Saccade,participant,image):
     #on ajoute le nom et numéro du participant de l'éxperience 
-    participant = participant.split('_')
-    nom = participant[2] + ' n° ' + participant[3][0:len(participant[3])-5]
+    participant = participant.split('.')
+    nom = participant[0]
     
     #on transforme le tableau en dataframe afin d'être sauvegardé
     Saccade_array = np.array(Saccade,dtype=[('Type',np.unicode_, 16), ('X_start (px)','<i1'), ('Y_start (px)','<i1'), ('X_end (px)','<i1'), ('Y_end (px)','<i1'),('Time Start (s)','<f4'),('Time End (s)','<f4'),('Duration (s)','<f4')])
@@ -167,11 +167,11 @@ def Save_Saccade(Saccade,participant,image):
     print(Saccade_array)
     print(SACCADE_INFORMATION)
     
-    if os.path.isfile(nom + 'saccade.xlsx'):
-        with pandas.ExcelWriter(nom + 'saccade.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
+    if os.path.isfile(nom + '_Saccade.xlsx'):
+        with pandas.ExcelWriter(nom + '_Saccade.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
             SACCADE_INFORMATION.to_excel(xls, sheet_name=image, index=True,)
     else:
-        SACCADE_INFORMATION.to_excel(nom + 'saccade.xlsx', sheet_name=image, index=True,)
+        SACCADE_INFORMATION.to_excel(nom + '_Saccade.xlsx', sheet_name=image, index=True,)
     
 #Fonction qui calcule la vitesse entre deux points, retourne un tableau de vitesse
 def speed_calcul(x,y,time):

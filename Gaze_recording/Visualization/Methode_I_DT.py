@@ -40,7 +40,7 @@ def Check_Fixation_Salvucci(time,start,end,duration_limit,rayon_dispersion,dispe
 
 def Check_Micro_Saccade_Salvucci(MicroS,t0,t1,x,y,microS_info,time,dispersion_max):
     
-    MicroS_duration = 0.025 #Durée max d'une Micro saccade : 40ms
+    MicroS_duration = 0.025 #Durée max d'une Micro saccade : 25ms
     All_Points_Not_Searched = True
     #On met de côté les points contenus dans la fixation
     x1 = x[t0:t1-1]
@@ -73,10 +73,6 @@ def Check_Micro_Saccade_Salvucci(MicroS,t0,t1,x,y,microS_info,time,dispersion_ma
             time = np.delete(time,tem)
     
     return MicroS,x,y,time,All_Points_Not_Searched,microS_info
-
-def Check_Micro_Saccade_Eucl():
-    
-    return
 
 def dispersion_map_Salvucci(time,gaze_x,gaze_y,radius,duration):
     """

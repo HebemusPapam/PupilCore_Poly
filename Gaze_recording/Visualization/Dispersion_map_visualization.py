@@ -168,7 +168,7 @@ def Disper_raw_plot(time,image_name,x,y,filename,extent,image,win_size,cercle):
 def Save_fixation(Fixation,participant,image):
     #on ajoute le nom et numéro du participant de l'éxperience 
     participant = participant.split('.')
-    nom = participant[0]
+    nom = METHOD_CHOICE + "_Fixation_" + participant[0]
     nom = DATA_PATH+nom
 
     #on transforme le tableau en dataframe afin d'être sauvegardé
@@ -176,16 +176,16 @@ def Save_fixation(Fixation,participant,image):
     FIXATION_INFORMATION = pandas.DataFrame(Cercle_array, columns=['Fixation_x (px)','Fixation_y (px)','rayon (px)','Time Start (s)','Duration (s)'])
     print(Cercle_array)
     print(FIXATION_INFORMATION)
-    if os.path.isfile(nom + '_Fixation.xlsx'):
-        with pandas.ExcelWriter(nom + '_Fixation.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
+    if os.path.isfile(nom + '.xlsx'):
+        with pandas.ExcelWriter(nom + '.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
             FIXATION_INFORMATION.to_excel(xls, sheet_name=image, index=True,)
     else:
-        FIXATION_INFORMATION.to_excel(nom + '_Fixation.xlsx', sheet_name=image, index=True,)
+        FIXATION_INFORMATION.to_excel(nom + '.xlsx', sheet_name=image, index=True,)
 
 def Save_Saccade(Saccade,participant,image):
     #on ajoute le nom et numéro du participant de l'éxperience 
     participant = participant.split('.')
-    nom = participant[0]
+    nom = METHOD_CHOICE +"_Saccade_"+ participant[0]
     nom = DATA_PATH+nom
     #on transforme le tableau en dataframe afin d'être sauvegardé
     Saccade_array = np.array(Saccade,dtype=[('Type',np.unicode_, 16), ('X_start (px)','<i1'), ('Y_start (px)','<i1'), ('X_end (px)','<i1'), ('Y_end (px)','<i1'),('Time Start (s)','<f4'),('Time End (s)','<f4'),('Duration (s)','<f4')])
@@ -193,11 +193,11 @@ def Save_Saccade(Saccade,participant,image):
     print(Saccade_array)
     print(SACCADE_INFORMATION)
     
-    if os.path.isfile(nom + '_Saccade.xlsx'):
-        with pandas.ExcelWriter(nom + '_Saccade.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
+    if os.path.isfile(nom + '.xlsx'):
+        with pandas.ExcelWriter(nom + '.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
             SACCADE_INFORMATION.to_excel(xls, sheet_name=image, index=True,)
     else:
-        SACCADE_INFORMATION.to_excel(nom + '_Saccade.xlsx', sheet_name=image, index=True,)
+        SACCADE_INFORMATION.to_excel(nom + '.xlsx', sheet_name=image, index=True,)
 
 def find_first_index(lst, condition):
     return [i for i, elem in enumerate(lst) if condition(elem)][0]
@@ -401,12 +401,12 @@ for s in range(nb_file):
             elif METHOD_CHOICE == 'Velocity':
                 Fixation,Saccade = IVT.Velocity(img_gaze[0],img_gaze[1],img_gaze[2],THRESOLD_SPEED)
                 
-            Save_fixation(Fixation,FILENAME[s],img_list[i])
-            Save_Saccade(Saccade,FILENAME[s],img_list[i])
+            Save_fixation(Fixation,FILENAME,img_list[i])
+            Save_Saccade(Saccade,FILENAME,img_list[i])
 
             if PLOT_CHOICE == 'Dispersion_plot':
                 dispersion_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],Fixation,extent,img,win_size)
             elif PLOT_CHOICE == 'Both':
-                Disper_raw_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME[s],extent,img,win_size,Fixation) 
+                Disper_raw_plot(img_gaze[2],img_list[i],img_gaze[0],img_gaze[1],FILENAME,extent,img,win_size,Fixation) 
             else:
                 pass

@@ -38,6 +38,7 @@ The heat map is computed using a 2d histogram of gaze data smoothed by a gausian
 ################## Import package ##################
 from tkinter import ttk
 import tkinter as tk
+import platform #connaitre système exploitation
 
 import warnings
 import os
@@ -52,10 +53,14 @@ from matplotlib.colors import ListedColormap
 ################## Parameters ##################
 # experiment data directory and files
 PATH = os.getcwd()
-IMG_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\img\\'
-HDF_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\data\\'
-FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
-
+if platform.system() == 'Windows' :
+    IMG_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\img\\'
+    HDF_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\data\\'
+    FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
+elif platform.system() == 'Darwin':
+    IMG_PATH = PATH + '/Gaze_recording/ExplorationImgCoder/img/'
+    HDF_PATH = PATH + '/Gaze_recording/ExplorationImgCoder/data/'
+    FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
 # heat map parameters
 HEATMAP_DETAIL = 0.04 #0.05 # this will determine the gaussian blur kerner of the image (higher number = more blur)
 
@@ -108,7 +113,7 @@ def heatmap(gaze_x, gaze_y, grid, detail):
     htmp = gaussian_filter(hist.T, sigma=(filter_w, filter_h), order=0)
     return htmp
 
-def heatmap_plot(image_name, image,extent,HM ):
+def heatmap_plot(image_name, image,extent,HM,cmap):
     "display the histogram overlap on the reference image"
     plt.figure()
     plt.title('Heat map '+image_name)
@@ -291,7 +296,6 @@ for i in range(nb_image): # LOOP OVER IMAGES
     win_size = win_size.replace(']','')
     win_size = list(win_size.split(", "))
 
-    
     ################## Heat map plot #######################
     if len(gaze_x_htmp) != 0 and PLOT_CHOICE == 'Heat_map': # if data exist
         # --- Display the histogram overlap on the reference image --- #
@@ -308,4 +312,6 @@ for i in range(nb_image): # LOOP OVER IMAGES
         # --- Display raw gaze + heatmap overlap on the reference image --- #
         H = heatmap(gaze_x_htmp, gaze_y_htmp, img_size, HEATMAP_DETAIL)
         raw_heatmap_plot(img_list[i],gaze_x_raw,gaze_y_raw,FILENAME,extent,img,win_size,cmap)
-        
+
+    
+

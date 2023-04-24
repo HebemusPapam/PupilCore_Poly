@@ -1,6 +1,8 @@
 ################## Import package ##################
 from tkinter import ttk
 import tkinter as tk
+# import filedialog module
+from tkinter import filedialog
 import math as mt
 import warnings
 import os
@@ -24,14 +26,16 @@ if platform.system() == 'Windows' :
     #IMG_PATH = 'D:\Cours\IESE4\PupilCore_POLYTECH\PupilCore_Poly\Gaze_recording\ExplorationImgCoder\img\\'
     HDF_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\data\\'
     #HDF_PATH = 'D:\Cours\IESE4\PupilCore_POLYTECH\PupilCore_Poly\Gaze_recording\ExplorationImgCoder\data\\'
+    DATA_PATH = PATH + '\Gaze_recording\ExplorationImgCoder\data\Excel\\'
 
 elif platform.system() == 'Darwin':
     IMG_PATH = PATH + '/Gaze_recording/ExplorationImgCoder/img/'
     HDF_PATH = PATH + '/Gaze_recording/ExplorationImgCoder/data/'
+    DATA_PATH = PATH + '/Gaze_recording/ExplorationImgCoder/data/Excel/'
 
 
 #FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5','ExploIMG_Tobii_d_001.hdf5'] # files to visualize
-FILENAME =  ['ExploIMG_PupilCore_m_001.hdf5']
+FILENAME =  'ExploIMG_new_code_marion_001.hdf5'
 
 # parameters useful just to init gaze data array's size which must be above T_IMG*F_TRACKER_MAX
 T_IMG = 7           # duration of the image exploration phase in seconds
@@ -163,33 +167,37 @@ def Disper_raw_plot(time,image_name,x,y,filename,extent,image,win_size,cercle):
 
 def Save_fixation(Fixation,participant,image):
     #on ajoute le nom et numéro du participant de l'éxperience 
-    participant = participant.split('_')
-    nom = participant[2] + ' n° ' + participant[3][0:len(participant[3])-5]
+    participant = participant.split('.')
+    nom = participant[0]
+    nom = DATA_PATH+nom
 
     #on transforme le tableau en dataframe afin d'être sauvegardé
-    Fixation_array = np.array(Fixation,dtype=[('Fixation_x (px)','<i1'),('Fixation_y (px)','<i1'),('rayon (px)','<f4'),('Time Start (s)','<f4'),('Duration (s)','<f4')])
-    FIXATION_INFORMATION = pandas.DataFrame(Fixation_array, columns=['Fixation_x (px)','Fixation_y (px)','rayon (px)','Time Start (s)','Duration (s)'])
-
-    if os.path.isfile(nom + ' fixation.xlsx'):
-        with pandas.ExcelWriter(nom + ' fixation.xlsx', mode="a", engine="openpyxl", if_sheet_exists="replace", ) as xls:
+    Cercle_array = np.array(Fixation,dtype=[('Fixation_x (px)','<i1'),('Fixation_y (px)','<i1'),('rayon (px)','<f4'),('Time Start (s)','<f4'),('Duration (s)','<f4')])
+    FIXATION_INFORMATION = pandas.DataFrame(Cercle_array, columns=['Fixation_x (px)','Fixation_y (px)','rayon (px)','Time Start (s)','Duration (s)'])
+    print(Cercle_array)
+    print(FIXATION_INFORMATION)
+    if os.path.isfile(nom + '_Fixation.xlsx'):
+        with pandas.ExcelWriter(nom + '_Fixation.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
             FIXATION_INFORMATION.to_excel(xls, sheet_name=image, index=True,)
     else:
-        FIXATION_INFORMATION.to_excel(nom + ' fixation.xlsx', sheet_name=image, index=True,)
+        FIXATION_INFORMATION.to_excel(nom + '_Fixation.xlsx', sheet_name=image, index=True,)
 
 def Save_Saccade(Saccade,participant,image):
     #on ajoute le nom et numéro du participant de l'éxperience 
-    participant = participant.split('_')
-    nom = participant[2] + ' n° ' + participant[3][0:len(participant[3])-5]
-    
+    participant = participant.split('.')
+    nom = participant[0]
+    nom = DATA_PATH+nom
     #on transforme le tableau en dataframe afin d'être sauvegardé
     Saccade_array = np.array(Saccade,dtype=[('Type',np.unicode_, 16), ('X_start (px)','<i1'), ('Y_start (px)','<i1'), ('X_end (px)','<i1'), ('Y_end (px)','<i1'),('Time Start (s)','<f4'),('Time End (s)','<f4'),('Duration (s)','<f4')])
     SACCADE_INFORMATION = pandas.DataFrame(Saccade_array, columns=['Type','X_start (px)','Y_start (px)','X_end (px)','Y_end (px)','Time Start (s)','Time End (s)','Duration (s)'])
-
-    if os.path.isfile(nom + ' saccade.xlsx'):
-        with pandas.ExcelWriter(nom + ' saccade.xlsx', mode="a", engine="openpyxl", if_sheet_exists="replace", ) as xls:
+    print(Saccade_array)
+    print(SACCADE_INFORMATION)
+    
+    if os.path.isfile(nom + '_Saccade.xlsx'):
+        with pandas.ExcelWriter(nom + '_Saccade.xlsx', mode="a", engine="openpyxl", if_sheet_exists="overlay", ) as xls:
             SACCADE_INFORMATION.to_excel(xls, sheet_name=image, index=True,)
     else:
-        SACCADE_INFORMATION.to_excel(nom + ' saccade.xlsx', sheet_name=image, index=True,)
+        SACCADE_INFORMATION.to_excel(nom + '_Saccade.xlsx', sheet_name=image, index=True,)
 
 def find_first_index(lst, condition):
     return [i for i, elem in enumerate(lst) if condition(elem)][0]
@@ -212,7 +220,22 @@ win.geometry('600x150')
 win.title('Plot parameters')
 Row = 1
 
+# Function for opening the
+# file explorer window
+def browseFiles():
+    global FILENAME
+    FILENAME = filedialog.askopenfilename(initialdir = HDF_PATH,title = "Select a File",filetypes = (("hd5f files","*.hdf5*"),("all files","*.*")))
+    FILENAME = FILENAME.split('/')[-1]
+    w4.configure(text = FILENAME)
+
+# choose the file
+b2=tk.Button(win,text="Select a data file", command= browseFiles)
+b2.grid(row=Row,column=0,padx=10,pady=5)  # adding to grid
+w4 = ttk.Label(win, text =  FILENAME)
+w4.grid(column = 1,row = Row, padx = 10, pady = 5)
+
 # config the box menu data choice
+Row+=1
 data_choice = ttk.Label(win, text = "Select binocular data :")
 data_choice.grid(column = 0,row = Row, padx = 10, pady = 5)
 data_choice = ttk.Combobox(win, values = ['Left eye', 'Right eye', 'Average both eyes']) #box menu
@@ -297,7 +320,7 @@ for s in range(nb_file):
 
     # --- Import hdf file data --- #
     # Open hierachical element contained in the HDF data file
-    f = h5py.File(HDF_PATH+FILENAME[s],'r')
+    f = h5py.File(HDF_PATH+FILENAME,'r')
  
     # Init 2d arrays to store gaze data for raw gaze plot (size=nb_file,nb_sample_per_trials)
     gaze_x_raw = np.empty((FRAMES,nb_file))*np.nan
@@ -349,8 +372,12 @@ for s in range(nb_file):
                         img_gaze   = np.array([avg_gaze_x, avg_gaze_y,gaze_time])
                 
                 #get all the value of time for each gaze and each image
-                
+                img_gaze = img_gaze.T
+
+                # remove samples with NaN value in one of the (x,y) coordinates = Blink
                 img_gaze = img_gaze[~np.isnan(img_gaze).any(axis=1)]
+                
+                img_gaze = img_gaze.T
             
        
 

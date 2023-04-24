@@ -104,6 +104,7 @@ def dispersion_map_Salvucci(time,gaze_x,gaze_y,radius,duration):
             Micro_Saccade = False
         elif end<(len(gaze_x)-2):
             end+=1
+            print(end)
         else :
             All_Points_Not_Searched = False        
         #On prend une fenêtre de point sur la durée mini d'une fixation et on vérifie sa dispersion
@@ -123,8 +124,18 @@ def dispersion_map_Salvucci(time,gaze_x,gaze_y,radius,duration):
         #Si le rayon n'a pas changé alors on a une saccade (aucune fixation dans le laps de temps étudié)
         else:
             No_Saccade = False
+            end = start
+            #Notre saccade dure tous la durée de la fenêtre donc on la recalibre pour ne prendre en compte que les 80 premières ms de cette fenêtre
+            while (time[end]-time[start]<0.08) and All_Points_Not_Searched:
+                if end<(len(gaze_x)-2):
+                    end+=1
+                else :
+                    All_Points_Not_Searched = False   
             saccade.append(("Normal",gaze_x[start],gaze_y[start],gaze_x[end],gaze_y[end],time[start],time[end],time[end]-time[start]))
-            start = end-1
+            if start-end != -1 : 
+                start = end-1
+            else : 
+                start = end
             dispersion = 0
 
         #On a besoin d'une saccade entre deux fixation (pas de saccade ou de Micro Saccades juste avant)

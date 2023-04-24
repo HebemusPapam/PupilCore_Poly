@@ -1,49 +1,103 @@
 import math as mt
 
-#Fonction qui calcule la vitesse entre deux points, retourne un tableau de vitesse
-def speed_calcul(x,y,time):
-    """Fonction qui calcule la vitesse entre deux points"""
-    speed = []
+"""Fonction qui permet de passer au point suivant"""
+def Suivant(x, end, FLAG_End):
+
+    if end < (len(x)-2):
+        end += 1
+    else:
+        FLAG_End = True
+    
+    return end, FLAG_End
+
+"""Fonction qui calcule la vitesse entre deux points"""
+def speed_calcul(x, y, time):
+
+    speed_calcul = []
     for i in range(len(x)-1):
-        speed.append(mt.sqrt(((x[i+1]-x[i])**2+(y[i+1]-y[i])**2))/(time[i+1]-time[i]))
-    return speed #Liste en pixel par seconde
+        speed_calcul.append(mt.sqrt(((x[i+1]-x[i])**2+(y[i+1]-y[i])**2))/(time[i+1]-time[i]))
+    
+    return speed_calcul
 
-def fixation_velocity(threshold_speed, x, y, time): # Le tableau time est en secondes 
-    """Fonction qui compare la vitesse entre deux points avec un seuil """
-    All_Points_Not_Searched = True #Flag pour savoir si on a parcouru tous les points
-    threshold_time = 0.03 # Seuil de temps pour définir une saccade minimum (en secondes)
-    threshold_speed = threshold_speed*1000 #Conversion du seuil en seconde :
-    duration = 0 
+"""Fonction qui calcule le centre de la fixation en utilisant la méthode du barycentre"""
+def middle_calcul(x,y):
 
+    n = len(x)
+    if n == 0:
+        return [0, 0]
+    else:
+        sum_x = sum(x)
+        sum_y = sum(y)
+        barycenter_x = sum_x / n
+        barycenter_y = sum_y / n
+        return [barycenter_x, barycenter_y]
+
+"""Fonction qui compare la vitesse entre deux points avec un seuil """
+def Velocity(x, y, time, threshold_speed):
+
+    #Initialisation des variables
     tab_fixation = []
     tab_saccade = []
-    
-    temps_start = time 
-    temps_end = time 
-    speed = speed_calcul(x,y,time)
-    for i in range(len(x)-1):
-        while(time[i+1]-time[i]< threshold_time and  All_Points_Not_Searched==True):
-            duration = time[i+1]-time[i] #Temps de fixation
-            if speed[i] < threshold_speed :
-                tab_fixation.append((x[i],y[i],temps_start[i],temps_end[i+1],duration))
-            else : 
-                tab_saccade.append((x[i],y[i],temps_start[i],temps_end[i+1],duration))
-            i+=1 # Condition pour ne pas dépasser la taille du tableau
-            if i == len(x)-1:
-                All_Points_Not_Searched = False
-    return tab_fixation,tab_saccade
+    tab_speed = []
+    start_sac = 0
+    start_fix = 0
+    end = 1
+    rayon_dispersion = 150
+    duration_micro_saccade = 0.035
 
-# On modifie le tableau tab_fixation de sorte à ne pas avoir plusieurs points de fixation consécutifs 
-def tab_fixation_modification(tab_fixation):
-    """Fonction qui modifie le tableau tab_fixation de sorte à ne pas avoir plusieurs points de fixation consécutifs """
-    tab_fixation_modifie = []
-    for i in range(len(tab_fixation)):
-        if tab_fixation[i][0] == "Fixation" and tab_fixation[i+1][0] == "Fixation":
-            print("Fixation")
-            # On ne garde que le premier point = début de fixation, on supprime les lignes redondantes et on fait le calcul de la durée de fixation totale 
-        elif tab_fixation[i][0] == "Saccade" and tab_fixation[i+1][0] == "Saccade":
-            tab_fixation_modifie.append("Saccade")
-        else:
-            tab_fixation_modifie.append(tab_fixation[i])
-    return tab_fixation_modifie 
- 
+    #Initialisation des flags
+    FLAG_End = False
+    FLAG_Micro_Saccade = True
+    FLAG_Fixation = False
+
+    #Calcul de la vitesse
+    tab_speed = speed_calcul(x, y, time)
+
+    #Début de la boucle
+    while not FLAG_End:
+
+        while FLAG_Micro_Saccade and not FLAG_End:
+
+            #Début de la non-fixation
+            start_sac = end
+            #Tant qu'il n'y a pas de fixation
+            while tab_speed[end] > threshold_speed and not FLAG_End:
+                "Pas de fixation"
+                end, FLAG_End = Suivant(x, end, FLAG_End)
+            #Fin de la non-fixation
+
+            #On regarde si la non-fixation est une saccade ou une micro-saccade
+            if time[end] - time[start_sac] > duration_micro_saccade:
+                "Saccade"
+                #On ajoute la saccade dans le tableau
+                FLAG_Micro_Saccade = False
+                tab_saccade.append(("Saccade",x[start_sac],y[start_sac],x[end],y[end],time[start_sac],time[end],time[end]-time[start_sac]))
+            else:
+                "Micro_Saccade"
+                #On continue la fixation
+
+                if start_fix == -1:
+                    #Début de la fixation
+                    start_fix = end
+                
+                #Tant qu'il y a une fixation
+                while tab_speed[end] <= threshold_speed and not FLAG_End:
+                    "Fixation"
+                    end, FLAG_End = Suivant(x, end, FLAG_End)
+                #Fin de la fixation
+                FLAG_Fixation = True
+
+        #Si il y a eu une fixation
+        if FLAG_Fixation:
+            #On ajoute la fixation dans le tableau
+            middle_fix = middle_calcul(x[start_fix:end],y[start_fix:end])
+            rayon_dispersion += rayon_dispersion * 0.001 * (end-start_fix)
+            tab_fixation.append((middle_fix[0],middle_fix[1],rayon_dispersion/3,time[start_fix],time[end-1]-time[start_fix]))
+
+            #On réinitialise les flags et les variables
+            FLAG_Fixation = False
+            FLAG_Micro_Saccade = True
+            start_fix = -1 #On met -1 pour dire qu'il n'y a pas de fixation
+            rayon_dispersion = 150
+        
+    return tab_fixation, tab_saccade
